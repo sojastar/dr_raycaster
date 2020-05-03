@@ -87,7 +87,7 @@ module RayCaster
         else
           delta = [ @texture_size * direction * ( ray[0] / ray[1] ),
                     @texture_size * direction ]
-          texture = intersection_tile_texture level, intersection
+          texture = level.texture_at(*intersection)
           while texture.nil? do
             intersection = intersection.add(delta)
 
@@ -97,7 +97,7 @@ module RayCaster
               break
             end
 
-            texture = intersection_tile_texture level, intersection
+            texture = level.texture_at(*intersection)
           end
         end 
 
@@ -143,8 +143,7 @@ module RayCaster
         else
           delta = [ @texture_size * direction,
                     @texture_size * direction * ( ray[1] / ray[0] ) ]
-
-          texture = intersection_tile_texture level, intersection
+          texture = level.texture_at(*intersection)
           while texture.nil? do
             intersection = intersection.add(delta)
 
@@ -154,7 +153,7 @@ module RayCaster
               break
             end
 
-            texture = intersection_tile_texture level, intersection
+            texture = level.texture_at(*intersection)
           end
         end
 
@@ -170,14 +169,6 @@ module RayCaster
 
     def is_outside_map?(level,intersection)
       intersection[0] < 0.0 || intersection[0] >= level.pixel_width || intersection[1] <  0.0 || intersection[1] >= level.pixel_height
-    end
-
-    def intersection_tile_texture(level,intersection)
-      tile_x      = intersection[0].floor.to_i / @texture_size
-      tile_y      = intersection[1].floor.to_i / @texture_size
-      tile_index  = tile_x + level.width * tile_y
-
-      level[tile_x,tile_y][:texture]
     end
 
     def serialize

@@ -10,9 +10,17 @@ require 'lib/player.rb'
 
 
 
-### SETUP :
+# ---=== CONSTANTS : ===---
+VIEWPORT_WIDTH  = 160
+VIEWPORT_HEIGHT = 90
+FOCAL           = 80
+
+
+
+
+# ---=== SETUP : ===---
 def setup(args)
-  ## Level :
+  # --- Level : ---
   map     = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
               [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1],
               [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
@@ -38,19 +46,20 @@ def setup(args)
                                                 start_x,
                                                 start_y )
 
-  ## Player :
-  args.state.player     = RayCaster::Player.new(  8,                                  # speed
-                                                  1,                                  # dampening
-                                                  3.0,                                # angular speed
-                                                  [ 32 * args.state.level.start_x,    # start position x
-                                                    32 * args.state.level.start_y ],  # start position y
-                                                  0.0 )                               # start angle
+  # --- Player : ---
+  args.state.player     = RayCaster::Player.new(  8,                                                  # speed
+                                                  1,                                                  # dampening
+                                                  3.0,                                                # angular speed
+                                                  blocks[:t1][:size] >> 1,                           # size
+                                                  [ blocks[:t1][:size] * args.state.level.start_x,   # start position x
+                                                    blocks[:t1][:size] * args.state.level.start_y ], # start position y
+                                                  0.0 )                                               # start angle
 
-  ## Renderer :
-  args.state.renderer   = RayCaster::Renderer.new(  160,    # viewport width
-                                                    90,     # viewport height
-                                                    80,     # focal
-                                                    32  )   # texture size
+  # --- Renderer : ---
+  args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
+                                                    VIEWPORT_HEIGHT,
+                                                    FOCAL,
+                                                    blocks[:t1][:size] )   # texture size
 
   args.state.setup_done = true
 end
@@ -59,15 +68,15 @@ end
 
 
 
-### MAIN LOOP :
+# ---=== MAIN LOOP : ===---
 def tick(args)
-  # Setup :
+  # --- Setup : ---
   setup(args) unless args.state.setup_done
 
-  # Update :
+  # --- Update : ---
   args.state.player.update_movement args, args.state.level
 
-  # Render :
+  # --- Render : ---
   columns = args.state.renderer.render  args.state.level,
                                         args.state.player
   args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
@@ -100,7 +109,7 @@ end
 
 
 
-### TOOLS :
+# --- TOOLS : ---
 def render_level_top_down(args,level,offset)
   blocks  = []
   level.height.times do |y|

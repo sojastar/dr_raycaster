@@ -2,7 +2,8 @@ module RayCaster
   class Player
     attr_accessor :position, :direction, :direction_normal
 
-    def initialize(speed,dampening,angular_speed,position,start_angle)
+    # ---=== INITIALIZATION : ===---
+    def initialize(speed,dampening,angular_speed,size,position,start_angle)
       @speed              = speed
       @current_speed      = 0.0
 
@@ -12,11 +13,17 @@ module RayCaster
       @angular_speed      = Trigo::deg_to_rad angular_speed
       @angle              = Trigo::deg_to_rad start_angle
 
+      @size               = size
+
       @position           = position.clone
       @direction          = Trigo::unit_vector_for  @angle
       @direction_normal   = Trigo::normal           @direction
     end
 
+
+    # ---=== MOVEMENT : ===---
+
+    # --- Update : ---
     def update_movement(args,level)
 
       # Direction :
@@ -38,12 +45,37 @@ module RayCaster
         @current_dampening  = -@dampening
       end
 
-      @position       = @position.add(@direction.mul(@current_speed))
+      displacement  = @direction.mul(@current_speed)
+      @position     = @position.add [ clip_movement_x(level, displacement),
+                                      clip_movement_y(level, displacement) ]
       
       # Speed dampening :
       @current_speed -= @current_dampening if @current_speed != 0
     end
 
+    # --- Clipping : ---
+    def clip_movement_x(level,displacement)
+      size_offset           = displacement[0] > 0 ? @size : -@size
+      bounding_box_next_x   = @position.add [ displacement[0] + size_offset, 0 ]
+      if level.has_wall_at? *bounding_box_next_x then
+        level.texture_size - ( @position[0] % level.texture_size ) - @size
+      else
+        displacement[0]
+      end
+    end
+
+    def clip_movement_y(level,displacement)
+      size_offset           = displacement[1] > 0 ? @size : -@size
+      bounding_box_next_y   = @position.add [ 0, displacement[1] + size_offset ]
+      if level.has_wall_at? *bounding_box_next_y then
+        level.texture_size - ( @position[1] % level.texture_size ) - @size
+      else
+        displacement[1]
+      end
+    end
+
+
+    # ---=== SERIALIZATION : ===---
     def serialize
       { current_speed:  @current_speed,
         position:       @position,
