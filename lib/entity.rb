@@ -4,7 +4,7 @@ module RayCaster
                 :path
 
     def initialize(position,path)
-      @postion  = position
+      @position = position
       @path     = path
     end
   end

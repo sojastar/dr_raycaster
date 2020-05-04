@@ -2,7 +2,7 @@ require 'lib/debug.rb'
 require 'lib/extend_array.rb'
 require 'lib/trigo.rb'
 require 'lib/renderer.rb'
-require 'lib/level.rb'
+require 'lib/map.rb'
 require 'lib/texture.rb'
 require 'lib/player.rb'
 
@@ -21,39 +21,39 @@ FOCAL           = 80
 # ---=== SETUP : ===---
 def setup(args)
   # --- Level : ---
-  map     = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
-              [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1],
-              [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
-              [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t3,:te,:t3,:te,:te,:te,:t3],
-              [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t2,:te,:t2,:t1,:t3,:t2,:t1],
-              [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
-              [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-              [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
-              [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
-              [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
-              [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
-              [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
-              [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-              [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
-  blocks  = { te: { type: 0, texture: nil,                       size: 32 },
-              t1: { type: 1, texture: 'textures/basic_wall.png', size: 32 },
-              t2: { type: 2, texture: 'textures/wall_plant.png', size: 32 },
-              t3: { type: 3, texture: 'textures/wall_leak.png',  size: 32 } }
-  start_x = 3
-  start_y = 3
-  args.state.level      = RayCaster::Level.new( map,
-                                                blocks,
-                                                start_x,
-                                                start_y )
+  cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
+                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1],
+                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
+                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t3,:te,:t3,:te,:te,:te,:t3],
+                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t2,:te,:t2,:t1,:t3,:t2,:t1],
+                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
+                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
+                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
+                            [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
+                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
+                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
+                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
+                            [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
+                            [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
+  blocks                = { te: { type: 0, texture: nil,                       size: 32 },
+                            t1: { type: 1, texture: 'textures/basic_wall.png', size: 32 },
+                            t2: { type: 2, texture: 'textures/wall_plant.png', size: 32 },
+                            t3: { type: 3, texture: 'textures/wall_leak.png',  size: 32 } }
+  start_x               = 3
+  start_y               = 3
+  args.state.map        = RayCaster::Map.new( cells,
+                                              blocks,
+                                              start_x,
+                                              start_y )
 
   # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  8,                                                  # speed
-                                                  1,                                                  # dampening
-                                                  3.0,                                                # angular speed
-                                                  blocks[:t1][:size] >> 1,                            # size
-                                                  [ blocks[:t1][:size] * args.state.level.start_x,    # start position x
-                                                    blocks[:t1][:size] * args.state.level.start_y ],  # start position y
-                                                  0.0 )                                               # start angle
+  args.state.player     = RayCaster::Player.new(  8,                                                # speed
+                                                  1,                                                # dampening
+                                                  3.0,                                              # angular speed
+                                                  blocks[:t1][:size] >> 1,                          # size
+                                                  [ blocks[:t1][:size] * args.state.map.start_x,    # start position x
+                                                    blocks[:t1][:size] * args.state.map.start_y ],  # start position y
+                                                  0.0 )                                             # start angle
 
   # --- Renderer : ---
   args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
@@ -77,10 +77,10 @@ def tick(args)
   setup(args) unless args.state.setup_done
 
   # --- Update : ---
-  args.state.player.update_movement args, args.state.level
+  args.state.player.update_movement args, args.state.map
 
   # --- Render : ---
-  columns = args.state.renderer.render  args.state.level,
+  columns = args.state.renderer.render  args.state.map,
                                         args.state.player
 
   puts columns if args.inputs.keyboard.key_down.space
@@ -142,11 +142,11 @@ end
 
 
 # --- TOOLS : ---
-def render_level_top_down(args,level,offset)
+def render_map_top_down(args,map,offset)
   blocks  = []
-  level.height.times do |y|
-    level.width.times do |x|
-      blocks << [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] +  case level[x,y][:type]
+  map.height.times do |y|
+    map.width.times do |x|
+      blocks << [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] +  case map[x,y][:type]
                                                                       when 0  then [  0,   0,   0, 255]
                                                                       when 1  then [255,   0,   0, 255]
                                                                       when 2  then [  0, 255,   0, 255]

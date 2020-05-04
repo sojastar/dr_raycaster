@@ -1,39 +1,45 @@
 module RayCaster
-  class Level
-    attr_accessor :blocks, :map
+  class Map
+    #attr_accessor :blocks, :map
     attr_reader   :width, :height,
                   :texture_size,
                   :pixel_width, :pixel_height,
                   :start_x, :start_y
 
+
+    # --- INITIALIZATION : ---
     def initialize(map,blocks,start_x,start_y)
       # Map :
       @blocks       = blocks
-      @map          = map.map { |line| line.map { |tile| @blocks[tile].clone } }
+      @cells        = map.map { |line| line.map { |tile| @blocks[tile].clone } }
 
       @texture_size = blocks[:te][:size]
       
-      @width        = @map.first.length
-      @height       = @map.length
+      @width        = @cells.first.length
+      @height       = @cells.length
       @pixel_width  = @width  * @blocks[:te][:size]
       @pixel_height = @height * @blocks[:te][:size]
 
       # Spawn position :
-      @start_x  = start_x
-      @start_y  = start_y
+      @start_x      = start_x
+      @start_y      = start_y
     end
 
-    def set_block(x,y,identifier)
-      @map[y][x] = @blocks[:identifier].clone
+    def set_block_at(x,y,identifier)
+      @cells[y][x]  = @blocks[:identifier].clone
     end
 
-    def [](x,y)     @map[y][x]        end
-    def []=(x,y,v)  @map[y][x] = v    end
+
+    # --- PIXEL AND TILE COORDINATES CONVERSIONS : ---
+    def [](x,y)     @cells[y][x]      end
+    def []=(x,y,v)  @cells[y][x] = v  end
 
     def tile_coord(c) c.floor.to_i / @texture_size end
     alias tile_x tile_coord
     alias tile_y tile_coord
 
+
+    # --- ACCESSORS : ---
     def to_tile_coords(x,y)
       [ x.floor.to_i / @texture_size,
         y.floor.to_i / @texture_size ]
@@ -43,7 +49,7 @@ module RayCaster
       tile_x      = x.floor.to_i / @texture_size
       tile_y      = y.floor.to_i / @texture_size
 
-      @map[tile_y][tile_x]
+      @cells[tile_y][tile_x]
     end
 
     def is_empty_at?(x,y)
@@ -58,8 +64,10 @@ module RayCaster
       tile_at(x,y)[:texture]
     end
 
+
+    # --- SERIALIZATION : ---
     def serialize
-      { map:      @map,
+      { cells:    @cells,
         start_x:  @start_x,
         start_y:  @start_y,
         blocks:   @blocks }
