@@ -10,8 +10,8 @@ module RayCaster
       @dampening          = dampening
       @current_dampening  = dampening
 
-      @angular_speed      = Trigo::deg_to_rad angular_speed
-      @angle              = Trigo::deg_to_rad start_angle
+      @angular_speed      = angular_speed.to_radians
+      @angle              = start_angle.to_radians
 
       @size               = size
 

@@ -50,9 +50,9 @@ def setup(args)
   args.state.player     = RayCaster::Player.new(  8,                                                  # speed
                                                   1,                                                  # dampening
                                                   3.0,                                                # angular speed
-                                                  blocks[:t1][:size] >> 1,                           # size
-                                                  [ blocks[:t1][:size] * args.state.level.start_x,   # start position x
-                                                    blocks[:t1][:size] * args.state.level.start_y ], # start position y
+                                                  blocks[:t1][:size] >> 1,                            # size
+                                                  [ blocks[:t1][:size] * args.state.level.start_x,    # start position x
+                                                    blocks[:t1][:size] * args.state.level.start_y ],  # start position y
                                                   0.0 )                                               # start angle
 
   # --- Renderer : ---
@@ -60,6 +60,9 @@ def setup(args)
                                                     VIEWPORT_HEIGHT,
                                                     FOCAL,
                                                     blocks[:t1][:size] )   # texture size
+
+  # --- Lighting : ---
+  compute_lighting(args, 32, 192, 0)
 
   args.state.setup_done = true
 end
@@ -79,22 +82,22 @@ def tick(args)
   # --- Render : ---
   columns = args.state.renderer.render  args.state.level,
                                         args.state.player
+
+  puts columns if args.inputs.keyboard.key_down.space
+
   args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
                             [0, 360, 1279, 720, 50, 50, 50, 255] ]  
   args.outputs.sprites << columns.map.with_index do |column,index|
                             rectified_height  = column[:height].to_i * 12
-                            #lighting          = column[:disance] > 80 ? 335 - column[:distance] : 255
-                            #lighting          = 0 if lighting < 0
-                            #lighting = 128
+                            lighting          = lighting_at args, column[:distance].to_i
                             { x:      index * 8,                            # 8 = 1280 / 160
                               y:      ( 720 - rectified_height ) >> 1,
                               w:      8,
                               h:      rectified_height,
                               path:   column[:texture],
-                              #r:      lighting,
-                              #g:      lighting,
-                              #b:      lighting,
-                              #a:      255,
+                              r:      lighting,
+                              g:      lighting,
+                              b:      lighting,
                               tile_x: column[:texture_offset],
                               tile_y: 0,
                               tile_w: 1,
@@ -103,6 +106,35 @@ def tick(args)
   #render_hits             args, columns,            [200, 200] 
   #render_level_top_down   args, args.state.level,   [200, 200]
   #render_player_top_down  args, args.state.player,  [200, 200]
+end
+
+
+
+
+
+# --- LIGHTING : ---
+def compute_lighting(args,full_light_distance,min_light_distance,min_light)
+  # Bounds :
+  args.state.lighting                       = {}
+  args.state.lighting[:full_light_distance] = full_light_distance
+  args.state.lighting[:min_light_distance]  = min_light_distance
+  args.state.lighting[:min_light]           = min_light
+  
+  # Gradient :
+  args.state.lighting[:gradient]            = []
+  a = ( 255.0 - min_light ) / ( full_light_distance - min_light_distance )
+  b = 255 - a * full_light_distance
+  min_light_distance.times do |distance|
+    if distance < full_light_distance then
+      args.state.lighting[:gradient][distance]  = 255
+    else
+      args.state.lighting[:gradient][distance]  = a * distance + b
+    end
+  end
+end
+
+def lighting_at(args,distance)
+  distance < args.state.lighting[:min_light_distance] ? args.state.lighting[:gradient][distance] : args.state.lighting[:min_light]
 end
 
 
