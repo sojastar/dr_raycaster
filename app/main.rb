@@ -1,9 +1,11 @@
 require 'lib/debug.rb'
 require 'lib/extend_array.rb'
 require 'lib/trigo.rb'
-require 'lib/renderer.rb'
-require 'lib/map.rb'
 require 'lib/texture.rb'
+require 'lib/map.rb'
+require 'lib/entity.rb'
+require 'lib/scene.rb'
+require 'lib/renderer.rb'
 require 'lib/player.rb'
 
 
@@ -20,7 +22,17 @@ FOCAL           = 80
 
 # ---=== SETUP : ===---
 def setup(args)
-  # --- Level : ---
+  # --- Textures : ---
+  textures              =   { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32 ),
+                              plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32 ),
+                              leaking_wall: RayCaster::Texture.new( 'textures/leaking_wall.png',  32 ),
+                              door:         RayCaster::Texture.new( 'textures/door.png',          32 ),
+                              stone:        RayCaster::Texture.new( 'textures/stone.png',          8 ),
+                              skull:        RayCaster::Texture.new( 'textures/skull.png',          8 ),
+                              spider_web:   RayCaster::Texture.new( 'textures/spider_web.png',    16 ),
+                              brazier:      RayCaster::Texture.new( 'textures/brazier.png',        8 ) }
+
+  # --- Map : ---
   cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
                             [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
@@ -35,31 +47,47 @@ def setup(args)
                             [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
                             [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
-  blocks                = { te: { type: 0, texture: nil,                       size: 32 },
-                            t1: { type: 1, texture: 'textures/basic_wall.png', size: 32 },
-                            t2: { type: 2, texture: 'textures/wall_plant.png', size: 32 },
-                            t3: { type: 3, texture: 'textures/wall_leak.png',  size: 32 } }
+  blocks                = { te: { texture: nil,                     other_param: 'for later' },
+                            t1: { texture: textures[:basic_wall],   other_param: 'for later' },
+                            t2: { texture: textures[:plant_wall],   other_param: 'for later' },
+                            t3: { texture: textures[:leaking_wall], other_param: 'for later' },
+                            do: { texture: textures[:door],         other_param: 'for later' } }   
   start_x               = 3
   start_y               = 3
   args.state.map        = RayCaster::Map.new( cells,
                                               blocks,
+                                              textures,
                                               start_x,
                                               start_y )
 
+  # --- Entities : ---
+  models                = { stone:       { texture: :stone,       colide: false, other_param: 'for later' },
+                            skull:       { texture: :skull,       colide: false, other_param: 'for later' },
+                            spider_web:  { texture: :spider_web,  colide: false, other_param: 'for later' },
+                            brazier:     { texture: :brazier,     colide: false, other_param: 'for later' } }
+
+  # --- Scene : ---
+  placements            = [ { model: :spider_web, position: [4,5], other_param: 'for later' } ]
+  args.state.scene      = RayCaster::Scene.new( args.state.map,
+                                                models,
+                                                placements )
+  puts args.state.scene.entities
+    
+
   # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  8,                                                # speed
-                                                  1,                                                # dampening
-                                                  3.0,                                              # angular speed
-                                                  blocks[:t1][:size] >> 1,                          # size
-                                                  [ blocks[:t1][:size] * args.state.map.start_x,    # start position x
-                                                    blocks[:t1][:size] * args.state.map.start_y ],  # start position y
-                                                  0.0 )                                             # start angle
+  args.state.player     = RayCaster::Player.new(  8,                                                        # speed
+                                                  1,                                                        # dampening
+                                                  3.0,                                                      # angular speed
+                                                  blocks[:t1][:texture].width >> 1,                         # size
+                                                  [ blocks[:t1][:texture].width* args.state.map.start_x,    # start position x
+                                                    blocks[:t1][:texture].width* args.state.map.start_y ],  # start position y
+                                                  0.0 )                                                     # start angle
 
   # --- Renderer : ---
   args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
                                                     VIEWPORT_HEIGHT,
                                                     FOCAL,
-                                                    blocks[:t1][:size] )   # texture size
+                                                    blocks[:t1][:texture].width ) # texture size
 
   # --- Lighting : ---
   compute_lighting(args, 32, 192, 0)
@@ -73,6 +101,7 @@ end
 
 # ---=== MAIN LOOP : ===---
 def tick(args)
+
   # --- Setup : ---
   setup(args) unless args.state.setup_done
 
@@ -80,10 +109,8 @@ def tick(args)
   args.state.player.update_movement args, args.state.map
 
   # --- Render : ---
-  columns = args.state.renderer.render  args.state.map,
+  columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
-
-  puts columns if args.inputs.keyboard.key_down.space
 
   args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
                             [0, 360, 1279, 720, 50, 50, 50, 255] ]  
@@ -103,9 +130,6 @@ def tick(args)
                               tile_w: 1,
                               tile_h: 32 } 
                           end
-  #render_hits             args, columns,            [200, 200] 
-  #render_level_top_down   args, args.state.level,   [200, 200]
-  #render_player_top_down  args, args.state.player,  [200, 200]
 end
 
 

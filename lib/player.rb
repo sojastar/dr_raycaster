@@ -48,7 +48,6 @@ module RayCaster
       displacement  = @direction.mul(@current_speed)
       @position     = @position.add [ clip_movement_x(map, displacement),
                                       clip_movement_y(map, displacement) ]
-      
       # Speed dampening :
       @current_speed -= @current_dampening if @current_speed != 0
     end

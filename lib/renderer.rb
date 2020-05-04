@@ -4,6 +4,8 @@ module RayCaster
 
     attr_reader :viewport_width, :viewport_height, :focal
 
+
+    # ---=== INITIALIZATION : ===---
     def initialize(viewport_width,viewport_height,focal,texture_size)
       @viewport_width             = viewport_width
       @viewport_half_width        = viewport_width >> 1 
@@ -24,17 +26,21 @@ module RayCaster
                                     end
     end
 
-    def render(player,level)
-      cast_wall_rays level, player
+
+    # ---=== GLOBAL RENDERING : ===---
+    def render(scene,player)
+      cast_wall_rays  player, scene.map 
+      render_entities player, scene.entities
     end
 
-    def cast_wall_rays(player,level)
+
+    # ---=== WALL RENDERING : ===---
+    def cast_wall_rays(player,map)
       ray_end = right_frustum_bound player
 
       @viewport_width.times do |ray_index|
-      #30.times do |ray_index|
-        h_hit = ray_horizontal_intersection level, player, ray_end.sub(player.position)
-        v_hit = ray_vertical_intersection   level, player, ray_end.sub(player.position)
+        h_hit = ray_horizontal_intersection map, player, ray_end.sub(player.position)
+        v_hit = ray_vertical_intersection   map, player, ray_end.sub(player.position)
 
         if    h_hit[:texture].nil?                then  @wall_hits[ray_index] = v_hit
         elsif v_hit[:texture].nil?                then  @wall_hits[ray_index] = h_hit
@@ -56,7 +62,7 @@ module RayCaster
         player.position[1] + @focal * player.direction[1] + @viewport_half_width * player.direction_normal[1] ]
     end
 
-    def ray_horizontal_intersection(level,player,ray)
+    def ray_horizontal_intersection(map,player,ray)
       if ray[1] == 0.0 then
         distance        = -1.0
         intersection    = [0.0, 0.0]
@@ -80,29 +86,31 @@ module RayCaster
         first_line_x    = player.position[0] + ( first_line_y - player.position[1] ) * ray[0] / ray[1];
         intersection    = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
 
-        if is_outside_map?(level, intersection) then
+        if is_outside_map?(map, intersection) then
           intersection  = [0.0, 0.0]
           texture       = nil
 
         else
           delta = [ @texture_size * direction * ( ray[0] / ray[1] ),
                     @texture_size * direction ]
-          texture = level.texture_at(*intersection)
+          texture = map.texture_at(*intersection)
           while texture.nil? do
+          #while map.is_empty_at?(*intersection) do
             intersection = intersection.add(delta)
 
-            if is_outside_map?(level, intersection) then
+            if is_outside_map?(map, intersection) then
               intersection  = [0.0, 0.0]
               texture       = nil
               break
             end
 
-            texture = level.texture_at(*intersection)
+            texture = map.texture_at(*intersection)
           end
         end 
 
-          distance        = Trigo::magnitude(player.position, intersection)
-          texture_offset  = intersection[0].to_i % @texture_size
+        #texture         = map.texture_at(*intersection) # new
+        distance        = Trigo::magnitude(player.position, intersection)
+        texture_offset  = intersection[0].to_i % @texture_size
 
       end
 
@@ -112,7 +120,7 @@ module RayCaster
         texture_offset: texture_offset  }
     end
 
-    def ray_vertical_intersection(level,player,ray)
+    def ray_vertical_intersection(map,player,ray)
       if ray[0] == 0.0 then
         distance        = -1.0
         intersection    = [0.0, 0.0]
@@ -136,27 +144,29 @@ module RayCaster
         first_line_y  = player.position[1] + ( first_line_x - player.position[0] ) * ray[1] / ray[0]
         intersection  = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
         
-        if is_outside_map?(level, intersection) then
+        if is_outside_map?(map, intersection) then
           intersection  = [0.0, 0.0]
           texture       = nil
 
         else
           delta = [ @texture_size * direction,
                     @texture_size * direction * ( ray[1] / ray[0] ) ]
-          texture = level.texture_at(*intersection)
+          texture = map.texture_at(*intersection)
           while texture.nil? do
+          #while map.is_empty_at?(*intersection) do
             intersection = intersection.add(delta)
 
-            if is_outside_map?(level, intersection) then
+            if is_outside_map?(map, intersection) then
               intersection  = [0.0, 0.0];
               texture       = nil
               break
             end
 
-            texture = level.texture_at(*intersection)
+            texture = map.texture_at(*intersection)
           end
         end
 
+        #texture         = map.texture_at(*intersection)
         distance        = Trigo::magnitude(player.position, intersection)
         texture_offset  = intersection[1].to_i % @texture_size
       end
@@ -167,10 +177,21 @@ module RayCaster
         texture_offset: texture_offset  }
     end
 
-    def is_outside_map?(level,intersection)
-      intersection[0] < 0.0 || intersection[0] >= level.pixel_width || intersection[1] <  0.0 || intersection[1] >= level.pixel_height
+    def is_outside_map?(map,intersection)
+      intersection[0] < 0.0 || intersection[0] >= map.pixel_width || intersection[1] <  0.0 || intersection[1] >= map.pixel_height
     end
 
+
+    # ---=== ENTITIES RENDERING : ===---
+    def render_entities(player,entities)
+      in_frustum_entities  = cull_out_of_frustum_entities player, entities
+    end
+
+    def cull_out_of_frustum_entities(player,entities)
+    end
+
+
+    # ---=== SERIALIZATION : ===---
     def serialize
       { viewport_width:   viewport_width,
         viewport_height:  viewport_height,
