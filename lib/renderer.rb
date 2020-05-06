@@ -19,9 +19,9 @@ module RayCaster
       @far                        = far
 
       @texture_size               = texture_size
+      @viewport_texture_factor    = @viewport_height * @texture_size
 
-      @wall_hits                  = Array.new(@viewport_width) 
-      @sprite_hits                = Array.new(@viewport_width) { [] }
+      @hits                       = []
 
       @fisheye_correction_factors = @viewport_width.times.map do |i|
                                       p1 = [ i - viewport_width / 2, @focal ]
@@ -37,7 +37,7 @@ module RayCaster
       cast_wall_rays  player, scene.map 
       render_entities player, scene.entities
 
-      { walls: @wall_hits, sprites: @sprite_hits }
+      @hits
     end
 
 
@@ -49,19 +49,18 @@ module RayCaster
         h_hit = ray_horizontal_intersection map, player, ray_end.sub(player.position)
         v_hit = ray_vertical_intersection   map, player, ray_end.sub(player.position)
 
-        if    h_hit[:texture].nil?                then  @wall_hits[ray_index] = v_hit
-        elsif v_hit[:texture].nil?                then  @wall_hits[ray_index] = h_hit
-        elsif h_hit[:distance] > v_hit[:distance] then  @wall_hits[ray_index] = v_hit
-        else                                            @wall_hits[ray_index] = h_hit
+        if    h_hit[:texture].nil?                then  @hits[ray_index] = [ v_hit ]
+        elsif v_hit[:texture].nil?                then  @hits[ray_index] = [ h_hit ]
+        elsif h_hit[:distance] > v_hit[:distance] then  @hits[ray_index] = [ v_hit ]
+        else                                            @hits[ray_index] = [ h_hit ]
         end
 
-        @wall_hits[ray_index][:height]  = ( @viewport_height * @texture_size ) /
-                                          ( @wall_hits[ray_index][:distance] * @fisheye_correction_factors[ray_index] )
+        @hits[ray_index].first[:height]  = @viewport_texture_factor / ( @hits[ray_index].first[:distance] * @fisheye_correction_factors[ray_index] )   # the wall is ALWAYS the FIRST layer of a column/slice
 
         ray_end = ray_end.sub(player.direction_normal)
       end
 
-      @wall_hits
+      @hits
     end
 
     def right_frustum_bound(player)
@@ -200,7 +199,7 @@ module RayCaster
 
       z_sorted_entities   = in_frustum_entities.sort { |e1,e2| e1.view_position[1] <=> e2.view_position[1] }
 
-      @sprite_hits.clear
+      #@sprite_hits.clear
       scan_textures_for z_sorted_entities
     end
 
@@ -228,22 +227,18 @@ module RayCaster
         projected_width       = projected_right_bound - projected_left_bound 
         texture_step          = entity.texture.width.to_f / projected_width
 
-        #$gtk.args.outputs.labels << [20, 700, "left bound: #{projected_left_bound} - right bound: #{projected_right_bound} - projected width: #{projected_width} - width: #{entity.texture.width} - texture step: #{texture_step}"]
-
         # Clipping :
         projected_left_bound  = [ 0, projected_left_bound ].max
         projected_right_bound = [ projected_right_bound, @viewport_width - 1 ].min
 
         # Scanning :
         projected_left_bound.upto(projected_right_bound) do |x|
-          height  = ( @viewport_height * @texture_size ) /
-                    ( entity.view_position[1] * @fisheye_correction_factors[x] )
-          layer = { texture:        entity.texture.path,
-                    texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
-                    height:         height,
-                    distance:       entity.view_position[1] }
-          if @sprite_hits[x].nil? then  @sprite_hits[x] =  [ layer ]
-          else                          @sprite_hits    << layer 
+          if entity.view_position[1] < @hits[x].first[:distance] then  # the first element of a hit is ALWAYS a wall
+            height  = @viewport_texture_factor / ( entity.view_position[1] * @fisheye_correction_factors[x] )
+            @hits[x] << { distance:       entity.view_position[1],
+                          texture:        entity.texture.path,
+                          texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
+                          height:         height }
           end
         end
       end
@@ -254,7 +249,9 @@ module RayCaster
     def serialize
       { viewport_width:   viewport_width,
         viewport_height:  viewport_height,
-        focal:            focal }
+        focal:            focal,
+        near:             near,
+        far:              far }
     end
 
     def inspect

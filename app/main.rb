@@ -40,9 +40,9 @@ def setup(args)
                             [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t3,:te,:t3,:te,:te,:te,:t3],
                             [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t2,:te,:t2,:t1,:t3,:t2,:t1],
-                            [:t2,:te,:te,:te,:te,:t2,:t3,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
+                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
                             [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-                            [:t3,:te,:te,:te,:t3,:t2,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
+                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
                             [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
@@ -69,7 +69,7 @@ def setup(args)
                             brazier:     { texture: textures[:brazier],     colide: false, other_param: 'for later' } }
 
   # --- Scene : ---
-  placements            = [ { model: :brazier, position: [4,5], other_param: 'for later' } ]
+  placements            = [ { model: :stone, position: [4,5], other_param: 'for later' } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
@@ -115,51 +115,30 @@ def tick(args)
   args.state.player.update_movement args, args.state.map
 
   # --- Render : ---
-  hits  = args.state.renderer.render  args.state.scene,
-                                      args.state.player
+  columns = args.state.renderer.render  args.state.scene,
+                                        args.state.player
 
   # --- Draw : ---
   if args.state.debug == 0 || args.state.debug.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]  
 
-    args.outputs.sprites << hits[:walls].map.with_index do |column,index|
-                              rectified_height  = column[:height].to_i * 12
-                              lighting          = lighting_at args, column[:distance].to_i
-                              { x:      index * 8,                            # 8 = 1280 / 160
-                                y:      ( 720 - rectified_height ) >> 1,
-                                w:      8,
-                                h:      rectified_height,
-                                path:   column[:texture],
-                                r:      lighting,
-                                g:      lighting,
-                                b:      lighting,
-                                tile_x: column[:texture_offset],
-                                tile_y: 0,
-                                tile_w: 1,
-                                tile_h: 32 } 
-                            end
-
-    args.outputs.sprites << hits[:sprites].map.with_index do |slice,index|
-                              unless slice.nil? then
-                                slice.map do |layer|
-                                  if layer[:distance] < hits[:walls][index][:distance] then
-                                    rectified_height  = layer[:height].to_i * 12
-                                    lighting          = lighting_at args, layer[:distance].to_i
-                                    { x:      index * 8,
-                                      y:      ( 720 - rectified_height ) >> 1,
-                                      w:      8,
-                                      h:      rectified_height,
-                                      path:   layer[:texture],
-                                      r:      lighting,
-                                      g:      lighting,
-                                      b:      lighting,
-                                      tile_x: layer[:texture_offset],
-                                      tile_y: 0,
-                                      tile_w: 1,
-                                      tile_h: 32 }
-                                  end
-                                end
+    args.outputs.sprites << columns.map.with_index do |column,index|
+                              column.map do |layer|
+                                rectified_height  = layer[:height].to_i * 12
+                                lighting          = lighting_at args, layer[:distance].to_i
+                                { x:      index * 8,
+                                  y:      ( 720 - rectified_height ) >> 1,
+                                  w:      8,
+                                  h:      rectified_height,
+                                  path:   layer[:texture],
+                                  r:      lighting,
+                                  g:      lighting,
+                                  b:      lighting,
+                                  tile_x: layer[:texture_offset],
+                                  tile_y: 0,
+                                  tile_w: 1,
+                                  tile_h: 32 }
                               end
                             end.flatten
 
