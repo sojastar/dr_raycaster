@@ -10,4 +10,8 @@ class Array
   def mul(n)
     self.map { |e| n * e }
   end
+
+  def round(n)
+    self.map { |e| e.round(n) }
+  end
 end

@@ -32,8 +32,8 @@ module RayCaster
 
     # --- PIXEL AND TILE COORDINATES CONVERSIONS : ---
     def to_tile_coords(x,y)
-      [ x.floor.to_i / @texture_size,
-        y.floor.to_i / @texture_size ]
+      [ x.floor.to_i.div(@texture_size),
+        y.floor.to_i.div(@texture_size) ]
     end
 
     def tile_coord(c) c.floor.to_i / @texture_size end

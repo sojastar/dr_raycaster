@@ -2,6 +2,8 @@ module RayCaster
   class Scene
     attr_reader :map, :entities
 
+
+    # ---=== INITIALIZATION : ===---
     def initialize(map, models, placements)
       @map      = map
 
@@ -9,12 +11,28 @@ module RayCaster
       #entities.each { |entity| add_entity entity }
 
       @entities = placements.map do |placement|
-                    RayCaster::Entity.new placement[:position], @models[placement[:model]] 
+                    RayCaster::Entity.new map, placement[:position], @models[placement[:model]] 
                   end
     end
 
+
+    # ---=== ENTITY MANAGEMENT : ===---
     def add_entity(model,position)
       @entities << RayCaster::Entity.new( @models[model], position )
+    end
+
+
+    # ---=== SERIALIZATION : ===---
+    def serialize
+      { map: @map.to_s, models: @models, entities: @entities.length }
+    end
+
+    def inspect
+      serialize.to_s
+    end
+
+    def to_s
+      serialize.to_s
     end
   end
 end

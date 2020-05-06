@@ -6,17 +6,22 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(viewport_width,viewport_height,focal,texture_size)
+    def initialize(viewport_width,viewport_height,focal,near,far,texture_size)
       @viewport_width             = viewport_width
       @viewport_half_width        = viewport_width >> 1 
       @viewport_height            = viewport_height
-      @viewport_half_height       = viewport_height>> 1 
+      #@viewport_half_height       = viewport_height>> 1 
 
       @focal                      = focal
+      @frustum_slope              = @viewport_half_width.to_f / focal 
+
+      @near                       = near
+      @far                        = far
 
       @texture_size               = texture_size
 
       @wall_hits                  = Array.new(@viewport_width) 
+      @sprite_hits                = Array.new(@viewport_width) { [] }
 
       @fisheye_correction_factors = @viewport_width.times.map do |i|
                                       p1 = [ i - viewport_width / 2, @focal ]
@@ -31,6 +36,8 @@ module RayCaster
     def render(scene,player)
       cast_wall_rays  player, scene.map 
       render_entities player, scene.entities
+
+      { walls: @wall_hits, sprites: @sprite_hits }
     end
 
 
@@ -60,6 +67,11 @@ module RayCaster
     def right_frustum_bound(player)
       [ player.position[0] + @focal * player.direction[0] + @viewport_half_width * player.direction_normal[0],
         player.position[1] + @focal * player.direction[1] + @viewport_half_width * player.direction_normal[1] ]
+    end
+
+    def left_frustum_bound(player)
+      [ player.position[0] + @focal * player.direction[0] - @viewport_half_width * player.direction_normal[0],
+        player.position[1] + @focal * player.direction[1] - @viewport_half_width * player.direction_normal[1] ]
     end
 
     def ray_horizontal_intersection(map,player,ray)
@@ -184,10 +196,57 @@ module RayCaster
 
     # ---=== ENTITIES RENDERING : ===---
     def render_entities(player,entities)
-      in_frustum_entities  = cull_out_of_frustum_entities player, entities
+      in_frustum_entities = cull_out_of_frustum_entities player, entities
+
+      z_sorted_entities   = in_frustum_entities.sort { |e1,e2| e1.view_position[1] <=> e2.view_position[1] }
+
+      @sprite_hits.clear
+      scan_textures_for z_sorted_entities
     end
 
     def cull_out_of_frustum_entities(player,entities)
+      entities.select do |entity|
+        entity.compute_view_position player
+
+        half_width  = entity.texture.half_width
+        left_bound  = entity.view_position.sub(player.direction_normal.mul(half_width))
+        right_bound = entity.view_position.add(player.direction_normal.mul(half_width))
+
+        point_in_frustum?(left_bound) || point_in_frustum?(right_bound) 
+      end
+    end
+
+    def point_in_frustum?(point)
+      point[1] > @near && point[0] < @far && ( point[1].to_f / point[0] ).abs > @frustum_slope 
+    end
+
+    def scan_textures_for(entities)
+      entities.each do |entity|
+        # Scanning parameters :
+        projected_left_bound  =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] + entity.texture.half_width ).to_f / entity.view_position[1] ).to_i
+        projected_right_bound =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] - entity.texture.half_width ).to_f / entity.view_position[1] ).to_i
+        projected_width       = projected_right_bound - projected_left_bound 
+        texture_step          = entity.texture.width.to_f / projected_width
+
+        #$gtk.args.outputs.labels << [20, 700, "left bound: #{projected_left_bound} - right bound: #{projected_right_bound} - projected width: #{projected_width} - width: #{entity.texture.width} - texture step: #{texture_step}"]
+
+        # Clipping :
+        projected_left_bound  = [ 0, projected_left_bound ].max
+        projected_right_bound = [ projected_right_bound, @viewport_width - 1 ].min
+
+        # Scanning :
+        projected_left_bound.upto(projected_right_bound) do |x|
+          height  = ( @viewport_height * @texture_size ) /
+                    ( entity.view_position[1] * @fisheye_correction_factors[x] )
+          layer = { texture:        entity.texture.path,
+                    texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
+                    height:         height,
+                    distance:       entity.view_position[1] }
+          if @sprite_hits[x].nil? then  @sprite_hits[x] =  [ layer ]
+          else                          @sprite_hits    << layer 
+          end
+        end
+      end
     end
 
 

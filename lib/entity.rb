@@ -1,17 +1,28 @@
 module RayCaster
   class Entity
-    attr_reader :position,
+    attr_reader :tile_position,
+                :world_position,
+                :view_position,
                 :texture
 
-    def initialize(position,params)
-      @position = position
+    def initialize(map,position,params)
+      @tile_position  = position.clone
+      @world_position = [ map.texture_size * position[0],
+                          map.texture_size * position[1] ]
 
-      @texture  = params[:texture] if params.has_key? :texture
+      @texture  = params[:texture].clone if params.has_key? :texture
       # get and process other params here...
     end
 
+    def compute_view_position(player)
+      dx  = @world_position[0] - player.position[0]
+      dy  = @world_position[1] - player.position[1]
+      @view_position  = [ dy * player.direction[0] - dx * player.direction[1],
+                          dx * player.direction[0] + dy * player.direction[1] ]
+    end
+
     def serialize
-      { position: @position, texture: @texture }
+      { position: @world_position, texture: @texture }
     end
 
     def inspect

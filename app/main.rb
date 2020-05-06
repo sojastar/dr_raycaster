@@ -16,6 +16,8 @@ require 'lib/player.rb'
 VIEWPORT_WIDTH  = 160
 VIEWPORT_HEIGHT = 90
 FOCAL           = 80
+NEAR            = 16 
+FAR             = 1500
 
 
 
@@ -38,9 +40,9 @@ def setup(args)
                             [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t3,:te,:t3,:te,:te,:te,:t3],
                             [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t2,:te,:t2,:t1,:t3,:t2,:t1],
-                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
+                            [:t2,:te,:te,:te,:te,:t2,:t3,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
                             [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
+                            [:t3,:te,:te,:te,:t3,:t2,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
                             [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
@@ -52,8 +54,8 @@ def setup(args)
                             t2: { texture: textures[:plant_wall],   other_param: 'for later' },
                             t3: { texture: textures[:leaking_wall], other_param: 'for later' },
                             do: { texture: textures[:door],         other_param: 'for later' } }   
-  start_x               = 3
-  start_y               = 3
+  start_x               = 1
+  start_y               = 1
   args.state.map        = RayCaster::Map.new( cells,
                                               blocks,
                                               textures,
@@ -61,17 +63,16 @@ def setup(args)
                                               start_y )
 
   # --- Entities : ---
-  models                = { stone:       { texture: :stone,       colide: false, other_param: 'for later' },
-                            skull:       { texture: :skull,       colide: false, other_param: 'for later' },
-                            spider_web:  { texture: :spider_web,  colide: false, other_param: 'for later' },
-                            brazier:     { texture: :brazier,     colide: false, other_param: 'for later' } }
+  models                = { stone:       { texture: textures[:stone],       colide: false, other_param: 'for later' },
+                            skull:       { texture: textures[:skull],       colide: false, other_param: 'for later' },
+                            spider_web:  { texture: textures[:spider_web],  colide: false, other_param: 'for later' },
+                            brazier:     { texture: textures[:brazier],     colide: false, other_param: 'for later' } }
 
   # --- Scene : ---
-  placements            = [ { model: :spider_web, position: [4,5], other_param: 'for later' } ]
+  placements            = [ { model: :brazier, position: [4,5], other_param: 'for later' } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
-  puts args.state.scene.entities
     
 
   # --- Player : ---
@@ -87,10 +88,15 @@ def setup(args)
   args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
                                                     VIEWPORT_HEIGHT,
                                                     FOCAL,
+                                                    NEAR,
+                                                    FAR,
                                                     blocks[:t1][:texture].width ) # texture size
 
   # --- Lighting : ---
   compute_lighting(args, 32, 192, 0)
+
+  # --- Miscellenaous : ---
+  args.state.debug      = Debug::parse_debug_arg($gtk.argv)
 
   args.state.setup_done = true
 end
@@ -109,27 +115,66 @@ def tick(args)
   args.state.player.update_movement args, args.state.map
 
   # --- Render : ---
-  columns = args.state.renderer.render  args.state.scene,
-                                        args.state.player
+  hits  = args.state.renderer.render  args.state.scene,
+                                      args.state.player
 
-  args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
-                            [0, 360, 1279, 720, 50, 50, 50, 255] ]  
-  args.outputs.sprites << columns.map.with_index do |column,index|
-                            rectified_height  = column[:height].to_i * 12
-                            lighting          = lighting_at args, column[:distance].to_i
-                            { x:      index * 8,                            # 8 = 1280 / 160
-                              y:      ( 720 - rectified_height ) >> 1,
-                              w:      8,
-                              h:      rectified_height,
-                              path:   column[:texture],
-                              r:      lighting,
-                              g:      lighting,
-                              b:      lighting,
-                              tile_x: column[:texture_offset],
-                              tile_y: 0,
-                              tile_w: 1,
-                              tile_h: 32 } 
-                          end
+  # --- Draw : ---
+  if args.state.debug == 0 || args.state.debug.nil? then
+    args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
+                              [0, 360, 1279, 720, 50, 50, 50, 255] ]  
+
+    args.outputs.sprites << hits[:walls].map.with_index do |column,index|
+                              rectified_height  = column[:height].to_i * 12
+                              lighting          = lighting_at args, column[:distance].to_i
+                              { x:      index * 8,                            # 8 = 1280 / 160
+                                y:      ( 720 - rectified_height ) >> 1,
+                                w:      8,
+                                h:      rectified_height,
+                                path:   column[:texture],
+                                r:      lighting,
+                                g:      lighting,
+                                b:      lighting,
+                                tile_x: column[:texture_offset],
+                                tile_y: 0,
+                                tile_w: 1,
+                                tile_h: 32 } 
+                            end
+
+    args.outputs.sprites << hits[:sprites].map.with_index do |slice,index|
+                              unless slice.nil? then
+                                slice.map do |layer|
+                                  if layer[:distance] < hits[:walls][index][:distance] then
+                                    rectified_height  = layer[:height].to_i * 12
+                                    lighting          = lighting_at args, layer[:distance].to_i
+                                    { x:      index * 8,
+                                      y:      ( 720 - rectified_height ) >> 1,
+                                      w:      8,
+                                      h:      rectified_height,
+                                      path:   layer[:texture],
+                                      r:      lighting,
+                                      g:      lighting,
+                                      b:      lighting,
+                                      tile_x: layer[:texture_offset],
+                                      tile_y: 0,
+                                      tile_w: 1,
+                                      tile_h: 32 }
+                                  end
+                                end
+                              end
+                            end.flatten
+
+  elsif args.state.debug == 1 then
+    offset_world_space  = [20,100]
+    Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
+    Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
+    Debug::render_wall_hits        hits[:walls],                              offset_world_space
+    Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
+
+    offset_view_space   = [700, 500]
+    Debug::render_view_space                                offset_view_space
+    Debug::render_entities_in_view_space  args.state.scene, offset_view_space 
+
+  end
 end
 
 
@@ -159,40 +204,5 @@ end
 
 def lighting_at(args,distance)
   distance < args.state.lighting[:min_light_distance] ? args.state.lighting[:gradient][distance] : args.state.lighting[:min_light]
-end
-
-
-
-
-
-# --- TOOLS : ---
-def render_map_top_down(args,map,offset)
-  blocks  = []
-  map.height.times do |y|
-    map.width.times do |x|
-      blocks << [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] +  case map[x,y][:type]
-                                                                      when 0  then [  0,   0,   0, 255]
-                                                                      when 1  then [255,   0,   0, 255]
-                                                                      when 2  then [  0, 255,   0, 255]
-                                                                      when 3  then [  0,   0, 255, 255]
-                                                                      end
-    end
-  end
-
-  args.outputs.solids << blocks
-end
-
-def render_player_top_down(args,player,offset)
-  x = player.position[0] + offset[0]
-  y = player.position[1] + offset[1]
-  Debug::draw_cross(player.position.add(offset), 5, [0, 0, 255, 255])
-
-  dx  = 32 * player.direction[0]
-  dy  = 32 * player.direction[1]
-  args.outputs.lines << [x, y, x + dx, y + dy, 0, 0, 255, 255]
-end
-
-def render_hits(args,hits,offset)
-  hits.each { |hit| Debug::draw_cross(hit[:intersection].add(offset), 2, [255, 0 ,255, 255]) }
 end
 

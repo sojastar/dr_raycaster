@@ -1,12 +1,15 @@
 module RayCaster
   class Texture
-    attr_reader :path, :width, :offset
+    attr_reader :path,
+                :width, :half_width,
+                :offset
 
     # --- INITIALIZATION : ---
     def initialize(path,width)
-      @path   = path
-      @width  = width
-      @offset = 0
+      @path       = path
+      @width      = width
+      @half_width = width >> 1
+      @offset     = 0
     end
 
     # --- ANIMATION : ---
