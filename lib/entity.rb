@@ -6,9 +6,9 @@ module RayCaster
                 :texture
 
     def initialize(map,position,params)
-      @tile_position  = position.clone
-      @world_position = [ map.texture_size * position[0] + map.texture_size / 2,
-                          map.texture_size * position[1] + map.texture_size / 2 ]
+      @tile_position  = [ position[0], position[1] ]
+      @world_position = [ map.texture_size * @tile_position[0] + map.texture_size / 2,
+                          map.texture_size * @tile_position[1] + map.texture_size / 2 ]
 
       @texture  = params[:texture].clone if params.has_key? :texture
       # get and process other params here...

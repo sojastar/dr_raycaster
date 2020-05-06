@@ -1,6 +1,5 @@
 module RayCaster
   class Map
-    #attr_accessor :blocks, :map
     attr_reader   :width, :height,
                   :texture_size,
                   :pixel_width, :pixel_height,

@@ -24,17 +24,12 @@ module Debug
     blocks  = []
     map.height.times do |y|
       map.width.times do |x|
-        #blocks << [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] +  case map[x,y][:type]
-        #                                                                when 0  then [  0,   0,   0, 255]
-        #                                                                when 1  then [255,   0,   0, 255]
-        #                                                                when 2  then [  0, 255,   0, 255]
-        #                                                                when 3  then [  0,   0, 255, 255]
-        #                                                                end
-        blocks << [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] + ( map[x,y][:texture].nil? ? [255, 255, 255, 255] : [0, 0, 0, 255] )
+        texture = map[x,y][:texture]
+        blocks << ( [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] << texture.path ) unless texture.nil?
       end
     end
   
-    $gtk.args.outputs.solids << blocks
+    $gtk.args.outputs.sprites << blocks
   end
   
   def self.render_player_top_down(player,renderer,offset)
@@ -59,8 +54,8 @@ module Debug
                                 [0, 255, 0, 255]
   end
   
-  def self.render_wall_hits(hits,offset)
-    hits.each { |hit| draw_cross(hit[:intersection].add(offset), 2, [255, 0 ,255, 255]) }
+  def self.render_wall_hits(columns,offset)
+    columns.each { |column| draw_cross(column.first[:intersection].add(offset), 2, [255, 0 ,255, 255]) }
   end
   
   def self.render_entities(scene,player,offset)

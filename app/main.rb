@@ -69,7 +69,27 @@ def setup(args)
                             brazier:     { texture: textures[:brazier],     colide: false, other_param: 'for later' } }
 
   # --- Scene : ---
-  placements            = [ { model: :stone, position: [4,5], other_param: 'for later' } ]
+  placements            = [ { model: :spider_web,  position: [ 1, 1] },
+                            { model: :stone,       position: [ 6, 1] },
+                            { model: :spider_web,  position: [10, 1] },
+                            { model: :stone,       position: [ 2, 3] },
+                            { model: :skull,       position: [14, 3] },
+                            { model: :stone,       position: [ 8, 4] },
+                            { model: :brazier,     position: [ 4, 5] },
+                            { model: :brazier,     position: [ 6, 5] },
+                            { model: :spider_web,  position: [16, 5] },
+                            { model: :stone,       position: [15, 6] },
+                            { model: :brazier,     position: [ 4, 7] },
+                            { model: :brazier,     position: [ 6, 7] },
+                            { model: :stone,       position: [ 2, 9] },
+                            { model: :brazier,     position: [10, 9] },
+                            { model: :skull,       position: [14, 9] },
+                            { model: :brazier,     position: [ 9,10] },
+                            { model: :brazier,     position: [11,10] },
+                            { model: :stone,       position: [ 4,11] },
+                            { model: :brazier,     position: [10,11] },
+                            { model: :spider_web,  position: [ 1,12] },
+                            { model: :spider_web,  position: [16,12] } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
@@ -120,7 +140,7 @@ def tick(args)
 
   # --- Draw : ---
   if args.state.debug == 0 || args.state.debug.nil? then
-    args.outputs.solids  << [ [0,   0, 1279, 359, 90, 90, 90, 255],
+    args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]  
 
     args.outputs.sprites << columns.map.with_index do |column,index|
@@ -146,12 +166,12 @@ def tick(args)
     offset_world_space  = [20,100]
     Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
     Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
-    Debug::render_wall_hits        hits[:walls],                              offset_world_space
+    Debug::render_wall_hits        columns,                                   offset_world_space
     Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
 
-    offset_view_space   = [700, 500]
-    Debug::render_view_space                                offset_view_space
-    Debug::render_entities_in_view_space  args.state.scene, offset_view_space 
+    #offset_view_space   = [700, 500]
+    #Debug::render_view_space                                offset_view_space
+    #Debug::render_entities_in_view_space  args.state.scene, offset_view_space 
 
   end
 end

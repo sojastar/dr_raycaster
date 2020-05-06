@@ -8,7 +8,6 @@ module RayCaster
       @map      = map
 
       @models   = models
-      #entities.each { |entity| add_entity entity }
 
       @entities = placements.map do |placement|
                     RayCaster::Entity.new map, placement[:position], @models[placement[:model]] 
