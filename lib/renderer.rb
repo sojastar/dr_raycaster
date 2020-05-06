@@ -21,7 +21,7 @@ module RayCaster
       @texture_size               = texture_size
       @viewport_texture_factor    = @viewport_height * @texture_size
 
-      @hits                       = []
+      @columns                    = []
 
       @fisheye_correction_factors = @viewport_width.times.map do |i|
                                       p1 = [ i - viewport_width / 2, @focal ]
@@ -37,7 +37,7 @@ module RayCaster
       cast_wall_rays  player, scene.map 
       render_entities player, scene.entities
 
-      @hits
+      @columns
     end
 
 
@@ -49,18 +49,16 @@ module RayCaster
         h_hit = ray_horizontal_intersection map, player, ray_end.sub(player.position)
         v_hit = ray_vertical_intersection   map, player, ray_end.sub(player.position)
 
-        if    h_hit[:texture].nil?                then  @hits[ray_index] = [ v_hit ]
-        elsif v_hit[:texture].nil?                then  @hits[ray_index] = [ h_hit ]
-        elsif h_hit[:distance] > v_hit[:distance] then  @hits[ray_index] = [ v_hit ]
-        else                                            @hits[ray_index] = [ h_hit ]
+        if    h_hit[:texture].nil?                then  @columns[ray_index] = [ v_hit ]
+        elsif v_hit[:texture].nil?                then  @columns[ray_index] = [ h_hit ]
+        elsif h_hit[:distance] > v_hit[:distance] then  @columns[ray_index] = [ v_hit ]
+        else                                            @columns[ray_index] = [ h_hit ]
         end
 
-        @hits[ray_index].first[:height]  = @viewport_texture_factor / ( @hits[ray_index].first[:distance] * @fisheye_correction_factors[ray_index] )   # the wall is ALWAYS the FIRST layer of a column/slice
+        @columns[ray_index].first[:height]  = @viewport_texture_factor / ( @columns[ray_index].first[:distance] * @fisheye_correction_factors[ray_index] )   # the wall is ALWAYS the FIRST layer of a rendering column
 
         ray_end = ray_end.sub(player.direction_normal)
       end
-
-      @hits
     end
 
     def right_frustum_bound(player)
@@ -196,10 +194,7 @@ module RayCaster
     # ---=== ENTITIES RENDERING : ===---
     def render_entities(player,entities)
       in_frustum_entities = cull_out_of_frustum_entities player, entities
-
       z_sorted_entities   = in_frustum_entities.sort { |e1,e2| e1.view_position[1] <=> e2.view_position[1] }
-
-      #@sprite_hits.clear
       scan_textures_for z_sorted_entities
     end
 
@@ -233,12 +228,12 @@ module RayCaster
 
         # Scanning :
         projected_left_bound.upto(projected_right_bound) do |x|
-          if entity.view_position[1] < @hits[x].first[:distance] then  # the first element of a hit is ALWAYS a wall
+          if entity.view_position[1] < @columns[x].first[:distance] then  # the first element of a hit is ALWAYS a wall
             height  = @viewport_texture_factor / ( entity.view_position[1] * @fisheye_correction_factors[x] )
-            @hits[x] << { distance:       entity.view_position[1],
-                          texture:        entity.texture.path,
-                          texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
-                          height:         height }
+            @columns[x] <<  { distance:       entity.view_position[1],
+                              texture:        entity.texture.path,
+                              texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
+                              height:         height }
           end
         end
       end
