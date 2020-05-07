@@ -1,7 +1,7 @@
 module Debug
   # ---=== DEBUG MODE PARSING: ===---
   def self.parse_debug_arg(argv)
-    argv.split[1..-2].each do |arg|
+    argv.split[1..-1].each do |arg|
       debug_flag, level  = arg.split('=')
       return level.to_i if debug_flag == '--debug' && level != nil
     end

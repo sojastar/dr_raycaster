@@ -49,11 +49,11 @@ def setup(args)
                             [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
                             [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
-  blocks                = { te: { texture: nil,                     other_param: 'for later' },
-                            t1: { texture: textures[:basic_wall],   other_param: 'for later' },
-                            t2: { texture: textures[:plant_wall],   other_param: 'for later' },
-                            t3: { texture: textures[:leaking_wall], other_param: 'for later' },
-                            do: { texture: textures[:door],         other_param: 'for later' } }
+  blocks                = { te: { texture: nil,                     is_door: false },
+                            t1: { texture: textures[:basic_wall],   is_door: false },
+                            t2: { texture: textures[:plant_wall],   is_door: false },
+                            t3: { texture: textures[:leaking_wall], is_door: false },
+                            do: { texture: textures[:door],         is_door: true  } }
   start_x               = 1
   start_y               = 1
   args.state.map        = RayCaster::Map.new( cells,
@@ -97,7 +97,7 @@ def setup(args)
 
   # --- Player : ---
   args.state.player     = RayCaster::Player.new(  4,                                                        # speed
-                                                  1,                                                        # dampening
+                                                  0.25,                                                     # dampening
                                                   3.0,                                                      # angular speed
                                                   blocks[:t1][:texture].width >> 1,                         # size
                                                   [ blocks[:t1][:texture].width* args.state.map.start_x,    # start position x

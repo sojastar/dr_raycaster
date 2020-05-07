@@ -10,8 +10,12 @@ module RayCaster
       @world_position = [ map.texture_size * @tile_position[0] + map.texture_size / 2,
                           map.texture_size * @tile_position[1] + map.texture_size / 2 ]
 
-      @texture  = params[:texture].clone if params.has_key? :texture
-      # get and process other params here...
+      params.each_pair do |param,value|
+        case param
+        when :texture  then @texture  = value.clone
+        # Get other params here...
+        end
+      end
     end
 
     def compute_view_position(player)

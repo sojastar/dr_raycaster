@@ -103,8 +103,8 @@ module RayCaster
           delta = [ @texture_size * direction * ( ray[0] / ray[1] ),
                     @texture_size * direction ]
           texture = map.texture_at(*intersection)
-          while texture.nil? do
-          #while map.is_empty_at?(*intersection) do
+
+          while map.is_empty_at?(*intersection) do
             intersection = intersection.add(delta)
 
             if is_outside_map?(map, intersection) then
@@ -117,7 +117,6 @@ module RayCaster
           end
         end 
 
-        #texture         = map.texture_at(*intersection) # new
         distance        = Trigo::magnitude(player.position, intersection)
         texture_offset  = intersection[0].to_i % @texture_size
 
@@ -149,9 +148,9 @@ module RayCaster
 
         end
 
-        v_epsilon     = ray[1] > 0.0 ? EPSILON : -EPSILON
-        first_line_y  = player.position[1] + ( first_line_x - player.position[0] ) * ray[1] / ray[0]
-        intersection  = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
+        v_epsilon       = ray[1] > 0.0 ? EPSILON : -EPSILON
+        first_line_y    = player.position[1] + ( first_line_x - player.position[0] ) * ray[1] / ray[0]
+        intersection    = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
         
         if is_outside_map?(map, intersection) then
           intersection  = [0.0, 0.0]
@@ -161,8 +160,8 @@ module RayCaster
           delta = [ @texture_size * direction,
                     @texture_size * direction * ( ray[1] / ray[0] ) ]
           texture = map.texture_at(*intersection)
-          while texture.nil? do
-          #while map.is_empty_at?(*intersection) do
+
+          while map.is_empty_at?(*intersection) do
             intersection = intersection.add(delta)
 
             if is_outside_map?(map, intersection) then
@@ -175,7 +174,6 @@ module RayCaster
           end
         end
 
-        #texture         = map.texture_at(*intersection)
         distance        = Trigo::magnitude(player.position, intersection)
         texture_offset  = intersection[1].to_i % @texture_size
       end

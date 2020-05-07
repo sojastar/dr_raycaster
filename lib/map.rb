@@ -64,6 +64,10 @@ module RayCaster
       tile_at(x,y)[:texture].nil? ? nil : tile_at(x,y)[:texture].path
     end
 
+    def is_there_door_at?(x,y)
+      tile_at(x,y)[:is_door]
+    end
+
 
     # --- SERIALIZATION : ---
     def serialize
