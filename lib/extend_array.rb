@@ -1,17 +1,17 @@
 class Array
   def add(other)
-    self.map.with_index { |e,i| e + other[i] }
+    [ at(0) + other[0], at(1) + other[1] ]
   end
 
   def sub(other)
-    self.map.with_index { |e,i| e - other[i] }
+    [ at(0) - other[0], at(1) - other[1] ]
   end
 
   def mul(n)
-    self.map { |e| n * e }
+    [ n * at(0), n * at(1) ] 
   end
 
   def round(n)
-    self.map { |e| e.round(n) }
+    [ at(0).round(n), at(1).round(n) ]
   end
 end

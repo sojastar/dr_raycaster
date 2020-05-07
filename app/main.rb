@@ -53,7 +53,7 @@ def setup(args)
                             t1: { texture: textures[:basic_wall],   other_param: 'for later' },
                             t2: { texture: textures[:plant_wall],   other_param: 'for later' },
                             t3: { texture: textures[:leaking_wall], other_param: 'for later' },
-                            do: { texture: textures[:door],         other_param: 'for later' } }   
+                            do: { texture: textures[:door],         other_param: 'for later' } }
   start_x               = 1
   start_y               = 1
   args.state.map        = RayCaster::Map.new( cells,
@@ -93,10 +93,10 @@ def setup(args)
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
-    
+
 
   # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  8,                                                        # speed
+  args.state.player     = RayCaster::Player.new(  4,                                                        # speed
                                                   1,                                                        # dampening
                                                   3.0,                                                      # angular speed
                                                   blocks[:t1][:texture].width >> 1,                         # size
@@ -141,7 +141,7 @@ def tick(args)
   # --- Draw : ---
   if args.state.debug == 0 || args.state.debug.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
-                              [0, 360, 1279, 720, 50, 50, 50, 255] ]  
+                              [0, 360, 1279, 720, 50, 50, 50, 255] ]
 
     args.outputs.sprites << columns.map.with_index do |column,index|
                               column.map do |layer|
@@ -160,7 +160,8 @@ def tick(args)
                                   tile_w: 1,
                                   tile_h: 32 }
                               end
-                            end.flatten
+                            #end.flatten
+                            end
 
   elsif args.state.debug == 1 then
     offset_world_space  = [20,100]
