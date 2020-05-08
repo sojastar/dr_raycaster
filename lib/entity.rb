@@ -1,14 +1,14 @@
 module RayCaster
   class Entity
-    attr_reader :tile_position,
+    attr_reader :cell_position,
                 :world_position,
                 :view_position,
                 :texture
 
     def initialize(map,position,params)
-      @tile_position  = [ position[0], position[1] ]
-      @world_position = [ map.texture_size * @tile_position[0] + map.texture_size / 2,
-                          map.texture_size * @tile_position[1] + map.texture_size / 2 ]
+      @cell_position  = [ position[0], position[1] ]
+      @world_position = [ map.texture_size * @cell_position[0] + map.texture_size / 2,
+                          map.texture_size * @cell_position[1] + map.texture_size / 2 ]
 
       params.each_pair do |param,value|
         case param

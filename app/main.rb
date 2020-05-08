@@ -36,12 +36,12 @@ def setup(args)
 
   # --- Map : ---
   cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
-                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1],
-                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:t2,:t3,:te,:t2],
-                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t3,:te,:t3,:te,:te,:te,:t3],
-                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t2,:te,:t2,:t1,:t3,:t2,:t1],
-                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t2],
-                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
+                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t1],
+                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
+                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:vd,:te,:te,:te,:te,:te,:t3],
+                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t1],
+                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
+                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:hd,:t2,:t1,:t3],
                             [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
@@ -53,7 +53,8 @@ def setup(args)
                             t1: { texture: textures[:basic_wall],   is_door: false },
                             t2: { texture: textures[:plant_wall],   is_door: false },
                             t3: { texture: textures[:leaking_wall], is_door: false },
-                            do: { texture: textures[:door],         is_door: true  } }
+                            vd: { texture: textures[:door],         is_door: true,  orientation: RayCaster::Map::VERTICAL   },
+                            hd: { texture: textures[:door],         is_door: true,  orientation: RayCaster::Map::HORIZONTAL } }
   start_x               = 1
   start_y               = 1
   args.state.map        = RayCaster::Map.new( cells,
