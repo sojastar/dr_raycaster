@@ -32,6 +32,7 @@ def setup(args)
                               stone:        RayCaster::Texture.new( 'textures/stone.png',          8 ),
                               skull:        RayCaster::Texture.new( 'textures/skull.png',          8 ),
                               spider_web:   RayCaster::Texture.new( 'textures/spider_web.png',    16 ),
+                              slime:        RayCaster::Texture.new( 'textures/slime.png',         32 ),
                               brazier:      RayCaster::Texture.new( 'textures/brazier.png',        8 ) }
 
   # --- Map : ---
@@ -41,7 +42,7 @@ def setup(args)
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:vd,:te,:te,:te,:te,:te,:t3],
                             [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
-                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:hd,:t2,:t1,:t3],
+                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:hd,:t2,:te,:t3],
                             [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
                             [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
                             [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
@@ -64,17 +65,18 @@ def setup(args)
                                               start_y )
 
   # --- Entities : ---
-  models                = { stone:       { texture: textures[:stone],       colide: false, other_param: 'for later' },
-                            skull:       { texture: textures[:skull],       colide: false, other_param: 'for later' },
-                            spider_web:  { texture: textures[:spider_web],  colide: false, other_param: 'for later' },
-                            brazier:     { texture: textures[:brazier],     colide: false, other_param: 'for later' } }
+  models                = { stone:      { texture: textures[:stone],      colide: false, other_param: 'for later' },
+                            skull:      { texture: textures[:skull],      colide: false, other_param: 'for later' },
+                            spider_web: { texture: textures[:spider_web], colide: false, other_param: 'for later' },
+                            slime:      { texture: textures[:slime],      colide: false, other_param: 'for later' },
+                            brazier:    { texture: textures[:brazier],    colide: false, other_param: 'for later' } }
 
   # --- Scene : ---
   placements            = [ { model: :spider_web,  position: [ 1, 1] },
                             { model: :stone,       position: [ 6, 1] },
                             { model: :spider_web,  position: [10, 1] },
                             { model: :stone,       position: [ 2, 3] },
-                            { model: :skull,       position: [14, 3] },
+                            { model: :slime,       position: [14, 3] },
                             { model: :stone,       position: [ 8, 4] },
                             { model: :brazier,     position: [ 4, 5] },
                             { model: :brazier,     position: [ 6, 5] },
@@ -117,7 +119,7 @@ def setup(args)
   compute_lighting(args, 32, 192, 0)
 
   # --- Miscellenaous : ---
-  args.state.debug      = Debug::parse_debug_arg($gtk.argv)
+  args.state.mode       = Debug::parse_debug_arg($gtk.argv)
 
   args.state.setup_done = true
 end
@@ -135,36 +137,48 @@ def tick(args)
   # --- Update : ---
   args.state.player.update_movement args, args.state.map
 
+  if args.inputs.keyboard.key_down.space then
+    if args.state.mode == 1 then
+      args.state.mode = 0
+    else
+      args.state.mode = 1
+    end
+  end
+
   # --- Render : ---
   columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
 
   # --- Draw : ---
-  if args.state.debug == 0 || args.state.debug.nil? then
+  #if args.state.debug == 0 || args.state.debug.nil? then
+  if args.state.mode == 0 || args.state.mode.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]
 
     args.outputs.sprites << columns.map.with_index do |column,index|
                               column.map do |layer|
-                                rectified_height  = layer[:height].to_i * 12
-                                lighting          = lighting_at args, layer[:distance].to_i
-                                { x:      index * 8,
-                                  y:      ( 720 - rectified_height ) >> 1,
-                                  w:      8,
-                                  h:      rectified_height,
-                                  path:   layer[:texture],
-                                  r:      lighting,
-                                  g:      lighting,
-                                  b:      lighting,
-                                  tile_x: layer[:texture_offset],
-                                  tile_y: 0,
-                                  tile_w: 1,
-                                  tile_h: 32 }
+                                unless layer[:texture].nil? then
+                                  rectified_height  = layer[:height].to_i * 12
+                                  lighting          = lighting_at args, layer[:distance].to_i
+                                  { x:      index * 8,
+                                    y:      ( 720 - rectified_height ) >> 1,
+                                    w:      8,
+                                    h:      rectified_height,
+                                    path:   layer[:texture],
+                                    r:      lighting,
+                                    g:      lighting,
+                                    b:      lighting,
+                                    tile_x: layer[:texture_offset] + layer[:texture_select],
+                                    tile_y: 0,
+                                    tile_w: 1,
+                                    tile_h: 32 }
+                                end
                               end
                             #end.flatten
                             end
 
-  elsif args.state.debug == 1 then
+  #elsif args.state.debug == 1 then
+  elsif args.state.mode == 1 then
     offset_world_space  = [20,100]
     Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
     Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space

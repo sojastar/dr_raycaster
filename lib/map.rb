@@ -25,7 +25,7 @@ module RayCaster
                       end
 
       @texture_size = blocks[:t1][:texture].width
-      
+
       @width        = @cells.first.length
       @height       = @cells.length
       @pixel_width  = @width  * @blocks[:t1][:texture].width
@@ -47,9 +47,9 @@ module RayCaster
         y.floor.to_i.div(@texture_size) ]
     end
 
-    def cell_coord(c) c.floor.to_i / @texture_size end
-    alias cell_x cell_coord
-    alias cell_y cell_coord
+    def cell_coord(c) c.floor.to_i.div(@texture_size) end
+    def cell_x(position)  position[0].floor.to_i.div(@texture_size) end
+    def cell_y(position)  position[1].floor.to_i.div(@texture_size) end
 
 
     # --- ACCESSORS : ---
@@ -66,7 +66,7 @@ module RayCaster
     def is_empty_at?(x,y)
       cell_at(x,y)[:texture].nil?
     end
-    
+
     def has_wall_at?(x,y)
       !cell_at(x,y)[:texture].nil?
     end
