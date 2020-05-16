@@ -97,6 +97,16 @@ module RayCaster
       !cell_at(x,y).nil? && cell_at(x,y)[:is_door]
     end
 
+    def cant_pass_through?(x,y)
+      cell = cell_at(x,y)
+
+      if cell[:is_door] then
+        cell[:door_offset] > @texture_size >> 2
+      else
+        !cell_at(x,y)[:texture].nil?
+      end
+    end
+
 
     # ---=== UPDATE : ===---
     def update(args)

@@ -64,7 +64,8 @@ module RayCaster
     def clip_movement_x(map,displacement)
       size_offset           = displacement[0] > 0 ? @size : -@size
       bounding_box_next_x   = @position.add [ displacement[0] + size_offset, 0 ]
-      if map.has_wall_at? *bounding_box_next_x then
+
+      if map.cant_pass_through? *bounding_box_next_x then
         map.texture_size - ( @position[0] % map.texture_size ) - @size
       else
         displacement[0]
@@ -74,7 +75,8 @@ module RayCaster
     def clip_movement_y(map,displacement)
       size_offset           = displacement[1] > 0 ? @size : -@size
       bounding_box_next_y   = @position.add [ 0, displacement[1] + size_offset ]
-      if map.has_wall_at? *bounding_box_next_y then
+
+      if map.cant_pass_through? *bounding_box_next_y then
         map.texture_size - ( @position[1] % map.texture_size ) - @size
       else
         displacement[1]
