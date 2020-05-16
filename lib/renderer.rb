@@ -1,11 +1,12 @@
 module RayCaster
   class Renderer
-    EPSILON =  0.1
-    NO_HIT  = { distance:       -1.0,
-                intersection:   [0.0, 0.0],
-                texture:        nil,
-                texture_select: 0,
-                texture_offset: 0 }
+    EPSILON       =  0.1
+    MAX_DISTANCE  = 64000
+    NO_HIT        = { distance:       MAX_DISTANCE,
+                      intersection:   [0.0, 0.0],
+                      texture:        nil,
+                      texture_select: 0,
+                      texture_offset: 0 }
 
     attr_reader :viewport_width, :viewport_height, :focal
 
@@ -51,43 +52,16 @@ module RayCaster
       ray_end = right_frustum_bound player
 
       @viewport_width.times do |ray_index|
+
         # Setup the ray parameters :
         h_ray = horizontal_ray_casting_setup  map, player, ray_end.sub(player.position)
-        h_hit = horizontal_ray_casting        map, player, h_ray[:start], h_ray[:delta]
+        v_ray = vertical_ray_casting_setup    map, player, ray_end.sub(player.position)
 
         # Casting the rays until a wall or a door is hit :
-        v_ray = vertical_ray_casting_setup    map, player, ray_end.sub(player.position)
+        h_hit = horizontal_ray_casting        map, player, h_ray[:start], h_ray[:delta]
         v_hit = vertical_ray_casting          map, player, v_ray[:start], v_ray[:delta]
 
-        if    h_hit[:texture].nil? then
-          @columns[ray_index] = if map.has_door_at?(*v_hit[:intersection]) then
-                                  [ vertical_ray_casting_through_door(map, player, h_hit, v_hit, v_ray[:delta]) ]
-                                else
-                                  [ v_hit ]
-                                end
-
-        elsif v_hit[:texture].nil? then
-          @columns[ray_index] = if map.has_door_at?(*h_hit[:intersection]) then
-                                  [ horizontal_ray_casting_through_door(map, player, h_hit, v_hit, h_ray[:delta]) ]
-                                else
-                                  [ h_hit ]
-                                end
-
-        elsif h_hit[:distance] > v_hit[:distance] then
-          @columns[ray_index] = if map.has_door_at?(*v_hit[:intersection]) then
-                                  [ vertical_ray_casting_through_door(map, player, h_hit, v_hit, v_ray[:delta]) ]
-                                else
-                                  [ v_hit ]
-                                end
-
-        else
-          @columns[ray_index] = if map.has_door_at?(*h_hit[:intersection]) then
-                                  [ horizontal_ray_casting_through_door(map, player, h_hit, v_hit, h_ray[:delta]) ]
-                                else
-                                  [ h_hit ]
-                                end
-
-        end
+        @columns[ray_index] = h_hit[:distance] > v_hit[:distance] ? [ v_hit ] : [ h_hit ]
 
         unless @columns[ray_index].first[:texture].nil? then
           @columns[ray_index].first[:height]  = @viewport_texture_factor / ( @columns[ray_index].first[:distance] * @fisheye_correction_factors[ray_index] )   # the wall is ALWAYS the FIRST layer of a rendering column
@@ -146,110 +120,47 @@ module RayCaster
       intersection  = start
       texture       = map.texture_at(*start)
 
-      while map.is_empty_at?(*intersection) do
-        intersection = intersection.add(delta)
+      while map.is_empty_at?(*intersection) || map.has_door_at?(*intersection) do
+
+        if map.has_door_at?(*intersection) then
+          half_delta    = delta.mul(0.5)
+          door_intersection  = intersection.add half_delta
+
+          if  map.cell_x(intersection) == map.cell_x(door_intersection) &&
+              door_intersection[0] % @texture_size < map.cell_at(*intersection)[:door_offset] then
+              return  { distance:       Trigo::magnitude(player.position, door_intersection),
+                        intersection:   door_intersection,
+                        texture:        map.texture_at(*door_intersection),
+                        texture_select: 0,
+                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection)[:door_offset],
+                        from:           :horizontal_ray_casting_through_door_DOOR_method }
+          else
+            intersection = intersection.add(delta)
+          end
+        else
+          intersection = intersection.add(delta)
+        end
 
         return NO_HIT if is_outside_map?(map, intersection)
 
-        texture = map.texture_at(*intersection)
+      end
+
+      adjacent_tile_position  = intersection.add( [ 0.0, -delta[1].to_i.sign * @texture_size ] )
+      if map.has_door_at?(*adjacent_tile_position) then
+        texture         = map.texture_at(*adjacent_tile_position)
+        texture_select  = @texture_size
+      else
+        texture         = map.texture_at(*intersection)
+        texture_select  = 0
       end
 
       { distance:       Trigo::magnitude(player.position, intersection),
         intersection:   intersection,
         texture:        texture,
-        texture_select: 0,
+        texture_select: texture_select,
         texture_offset: intersection[0].to_i % @texture_size,
         from:           :horizontal_ray_casting_method }
     end
-
-    def horizontal_ray_casting_through_door(map,player,h_hit,v_hit,delta)
-      half_delta    = delta.mul(0.5)
-      intersection  = h_hit[:intersection].add half_delta
-
-      if map.cell_x(h_hit[:intersection]) == map.cell_x(intersection) then
-        #puts 'hit door'
-        distance        = Trigo::magnitude(player.position, intersection)
-        texture         = map.texture_at(*intersection)
-        texture_select  = 0
-        texture_offset  = intersection[0].to_i % @texture_size
-        from            = :horizontal_ray_casting_through_door_DOOR_method
-      #elsif map.cell_y(v_hit[:intersection]) == map.cell_y(h_hit[:intersection]) then
-      else
-        #puts 'hit wall'
-        #if map.cell_y(v_hit[:intersection]) == map.cell_y(h_hit[:intersection]) then
-          distance        = v_hit[:distance]
-          intersection    = v_hit[:intersection]
-          texture         = h_hit[:texture]
-          texture_select  = @texture_size
-          texture_offset  = v_hit[:texture_offset]
-          from            = :horizontal_ray_casting_through_door_WALL_method
-        #end
-      end
-
-      { distance:       distance,
-        intersection:   intersection,
-        texture:        texture,
-        texture_select: texture_select,
-        texture_offset: texture_offset,
-        from:           from }
-    end
-
-    #def ray_horizontal_intersection(map,player,ray)
-    #  if ray[1] == 0.0 then
-    #    distance        = -1.0
-    #    intersection    = [0.0, 0.0]
-    #    texture         = nil
-    #    texture_offset  = 0
-
-    #  else
-    #    if ray[1] > 0.0 then
-    #      first_line_y  = player.position[1].floor.to_i - ( player.position[1].to_i % @texture_size ) + @texture_size
-    #      direction     = 1.0
-    #      v_epsilon     = EPSILON
-
-    #    else
-    #      first_line_y  = player.position[1].floor.to_i - ( player.position[1].to_i % @texture_size )
-    #      direction     = -1.0
-    #      v_epsilon     = -EPSILON
-
-    #    end
-
-    #    h_epsilon       = ray[0] > 0.0 ? EPSILON : -EPSILON
-    #    first_line_x    = player.position[0] + ( first_line_y - player.position[1] ) * ray[0] / ray[1];
-    #    intersection    = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
-
-    #    if is_outside_map?(map, intersection) then
-    #      intersection  = [0.0, 0.0]
-    #      texture       = nil
-
-    #    else
-    #      delta = [ @texture_size * direction * ( ray[0] / ray[1] ),
-    #                @texture_size * direction ]
-    #      texture = map.texture_at(*intersection)
-
-    #      while map.is_empty_at?(*intersection) do
-    #        intersection = intersection.add(delta)
-
-    #        if is_outside_map?(map, intersection) then
-    #          intersection  = [0.0, 0.0]
-    #          texture       = nil
-    #          break
-    #        end
-
-    #        texture = map.texture_at(*intersection)
-    #      end
-    #    end 
-
-    #    distance        = Trigo::magnitude(player.position, intersection)
-    #    texture_offset  = intersection[0].to_i % @texture_size
-
-    #  end
-
-    #  { distance:       distance,
-    #    intersection:   intersection,
-    #    texture:        texture,
-    #    texture_offset: texture_offset  }
-    #end
 
     def vertical_ray_casting_setup(map,player,ray)
       if ray[0] == 0.0 then
@@ -289,113 +200,47 @@ module RayCaster
       intersection  = start
       texture       = map.texture_at(*start)
 
-      while map.is_empty_at?(*intersection) do
-        intersection = intersection.add(delta)
+      while map.is_empty_at?(*intersection) || map.has_door_at?(*intersection) do
+
+        if map.has_door_at?(*intersection) then
+          half_delta        = delta.mul(0.5)
+          door_intersection = intersection.add half_delta
+
+          if  map.cell_y(intersection) == map.cell_y(door_intersection) &&
+              door_intersection[1] % @texture_size < map.cell_at(*intersection)[:door_offset] then
+              return  { distance:       Trigo::magnitude(player.position, door_intersection),
+                        intersection:   door_intersection,
+                        texture:        map.texture_at(*door_intersection),
+                        texture_select: 0,
+                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection)[:door_offset],
+                        from:           :vertical_ray_casting_through_door_DOOR_method }
+          else
+            intersection = intersection.add(delta)
+          end
+        else
+          intersection = intersection.add(delta)
+        end
 
         return NO_HIT if is_outside_map?(map, intersection)
 
-        texture = map.texture_at(*intersection)
+      end
+
+      adjacent_tile_position  = intersection.add( [ -delta[0].to_i.sign * @texture_size, 0.0 ] )
+      if map.has_door_at?(*adjacent_tile_position) then
+        texture         = map.texture_at(*adjacent_tile_position)
+        texture_select  = @texture_size
+      else
+        texture         = map.texture_at(*intersection)
+        texture_select  = 0
       end
 
       { distance:       Trigo::magnitude(player.position, intersection),
         intersection:   intersection,
         texture:        texture,
-        texture_select: 0,
+        texture_select: texture_select,
         texture_offset: intersection[1].to_i % @texture_size,
         from:           :vertical_ray_casting_method }
     end
-
-    def vertical_ray_casting_through_door(map,player,h_hit,v_hit,delta)
-      #puts delta
-      half_delta    = delta.mul(0.5)
-      #puts half_delta
-      intersection  = v_hit[:intersection].add half_delta
-      #puts intersection
-
-      if map.cell_y(v_hit[:intersection]) == map.cell_y(intersection) then
-        #puts 'hit door'
-        distance        = Trigo::magnitude(player.position, intersection)
-        texture         = map.texture_at(*intersection)
-        texture_select  = 0
-        texture_offset  = intersection[1].to_i % @texture_size
-        from            = :vertical_ray_casting_through_door_DOOR_method
-      else
-        #puts 'hit wall'
-        #puts "v_hit: #{map.cell_y(v_hit[:intersection])} - h_hit: #{map.cell_y(h_hit[:intersection])}"
-        #if map.cell_y(v_hit[:intersection]) + 1 == map.cell_y(h_hit[:intersection]) then
-        #if map.cell_x(v_hit[:intersection]) == map.cell_x(h_hit[:intersection]) then
-          distance        = h_hit[:distance]
-          intersection    = h_hit[:intersection]
-          texture         = v_hit[:texture]
-          texture_select  = @texture_size
-          texture_offset  = h_hit[:texture_offset]
-        from            = :vertical_ray_casting_through_door_WALL_method
-        #end
-      end
-
-      { distance:       distance,
-        intersection:   intersection,
-        texture:        texture,
-        texture_select: texture_select,
-        texture_offset: texture_offset,
-        from:           from }
-    end
-
-    #def ray_vertical_intersection(map,player,ray)
-    #  if ray[0] == 0.0 then
-    #    distance        = -1.0
-    #    intersection    = [0.0, 0.0]
-    #    texture         = nil
-    #    texture_offset  = 0
-
-    #  else
-    #    if ray[0] > 0.0 then
-    #      first_line_x  = player.position[0].floor.to_i - ( player.position[0].to_i % @texture_size ) + @texture_size
-    #      direction     = 1.0
-    #      h_epsilon     = EPSILON
-
-    #    else
-    #      first_line_x  = player.position[0].floor.to_i - ( player.position[0].to_i % @texture_size )
-    #      direction     = -1.0
-    #      h_epsilon     = -EPSILON
-
-    #    end
-
-    #    v_epsilon       = ray[1] > 0.0 ? EPSILON : -EPSILON
-    #    first_line_y    = player.position[1] + ( first_line_x - player.position[0] ) * ray[1] / ray[0]
-    #    intersection    = [ first_line_x + h_epsilon, first_line_y + v_epsilon ]
-
-    #    if is_outside_map?(map, intersection) then
-    #      intersection  = [0.0, 0.0]
-    #      texture       = nil
-
-    #    else
-    #      delta = [ @texture_size * direction,
-    #                @texture_size * direction * ( ray[1] / ray[0] ) ]
-    #      texture = map.texture_at(*intersection)
-
-    #      while map.is_empty_at?(*intersection) do
-    #        intersection = intersection.add(delta)
-
-    #        if is_outside_map?(map, intersection) then
-    #          intersection  = [0.0, 0.0];
-    #          texture       = nil
-    #          break
-    #        end
-
-    #        texture = map.texture_at(*intersection)
-    #      end
-    #    end
-
-    #    distance        = Trigo::magnitude(player.position, intersection)
-    #    texture_offset  = intersection[1].to_i % @texture_size
-    #  end
-
-    #  { distance:       distance,
-    #    intersection:   intersection,
-    #    texture:        texture,
-    #    texture_offset: texture_offset  }
-    #end
 
     def is_outside_map?(map,intersection)
       intersection[0] < 0.0 || intersection[0] >= map.pixel_width || intersection[1] <  0.0 || intersection[1] >= map.pixel_height

@@ -3,7 +3,12 @@ module Debug
   def self.parse_debug_arg(argv)
     argv.split[1..-1].each do |arg|
       debug_flag, level  = arg.split('=')
-      return level.to_i if debug_flag == '--debug' && level != nil
+      #return level.to_i if debug_flag == '--debug' && level != nil
+      if debug_flag == '--debug' && level != nil then
+        return level.to_i
+      else
+        return 0
+      end
     end
 
     nil
@@ -52,6 +57,10 @@ module Debug
     $gtk.args.outputs.lines <<  player.position.add(offset)     +
                                 frustum_right_bound.add(offset) +
                                 [0, 255, 0, 255]
+
+    # Look at tile :
+    look_at = player.position.add(player.direction.mul(24))
+    draw_cross(look_at.add(offset), 5, [0, 255, 0, 255])
   end
   
   def self.render_wall_hits(columns,offset)

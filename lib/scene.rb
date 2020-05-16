@@ -21,6 +21,13 @@ module RayCaster
     end
 
 
+    # ---=== UPDATE : ===---
+    def update(args,player)
+      @map.update args
+      #@entities.each { |entity| entity.update args, @map, player }
+    end
+
+
     # ---=== SERIALIZATION : ===---
     def serialize
       { map: @map.to_s, models: @models, entities: @entities.length }

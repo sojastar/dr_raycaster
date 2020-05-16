@@ -14,10 +14,18 @@ module RayCaster
       @angle              = start_angle.to_radians
 
       @size               = size
+      @look_ahead         = ( 4.0 * size / 3.0 ).to_i
 
       @position           = position.clone
       @direction          = Trigo::unit_vector_for  @angle
       @direction_normal   = Trigo::normal           @direction
+    end
+
+
+    # ---=== UPDATE : ===---
+    def update(args,map)
+      update_actions  args, map
+      update_movement args, map
     end
 
 
@@ -70,6 +78,24 @@ module RayCaster
         map.texture_size - ( @position[1] % map.texture_size ) - @size
       else
         displacement[1]
+      end
+    end
+
+
+    # ---=== ACTIONS : ===---
+    def update_actions(args,map)
+      if  args.inputs.keyboard.key_down.e
+        looking_at  = @position.add(@direction.mul(@look_ahead))
+        cell        = map.cell_at(*looking_at)
+        operate_door_at(cell) if cell[:is_door]
+      end
+    end
+
+    def operate_door_at(cell)
+      if    cell[:status] == :closed || cell[:status] == :closing then
+        cell[:status] = :opening
+      elsif cell[:status] == :open   || cell[:status] == :opening then
+        cell[:status] = :closing
       end
     end
 

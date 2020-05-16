@@ -24,6 +24,8 @@ FAR             = 1500
 
 # ---=== SETUP : ===---
 def setup(args)
+  args.gtk.log_level = :off
+
   # --- Textures : ---
   textures              =   { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32 ),
                               plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32 ),
@@ -54,10 +56,10 @@ def setup(args)
                             t1: { texture: textures[:basic_wall],   is_door: false },
                             t2: { texture: textures[:plant_wall],   is_door: false },
                             t3: { texture: textures[:leaking_wall], is_door: false },
-                            vd: { texture: textures[:door],         is_door: true,  orientation: RayCaster::Map::VERTICAL   },
-                            hd: { texture: textures[:door],         is_door: true,  orientation: RayCaster::Map::HORIZONTAL } }
-  start_x               = 1
-  start_y               = 1
+                            vd: { texture: textures[:door],         is_door: true  },
+                            hd: { texture: textures[:door],         is_door: true  } }
+  start_x               = 2
+  start_y               = 2
   args.state.map        = RayCaster::Map.new( cells,
                                               blocks,
                                               textures,
@@ -135,15 +137,10 @@ def tick(args)
   setup(args) unless args.state.setup_done
 
   # --- Update : ---
-  args.state.player.update_movement args, args.state.map
+  args.state.player.update  args, args.state.map
+  args.state.scene.update   args, args.state.player
 
-  if args.inputs.keyboard.key_down.space then
-    if args.state.mode == 1 then
-      args.state.mode = 0
-    else
-      args.state.mode = 1
-    end
-  end
+  args.state.mode = ( args.state.mode + 1 ) % 2 if args.inputs.keyboard.key_down.space
 
   # --- Render : ---
   columns = args.state.renderer.render  args.state.scene,
@@ -174,7 +171,6 @@ def tick(args)
                                     tile_h: 32 }
                                 end
                               end
-                            #end.flatten
                             end
 
   #elsif args.state.debug == 1 then
