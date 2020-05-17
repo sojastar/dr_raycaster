@@ -3,7 +3,7 @@ module RayCaster
     attr_accessor :position, :direction, :direction_normal
 
     # ---=== INITIALIZATION : ===---
-    def initialize(speed,dampening,angular_speed,size,position,start_angle)
+    def initialize(speed,dampening,angular_speed,texture_size,size,position,start_angle)
       @speed              = speed
       @current_speed      = 0.0
 
@@ -13,10 +13,12 @@ module RayCaster
       @angular_speed      = angular_speed.to_radians
       @angle              = start_angle.to_radians
 
-      @size               = size
-      @look_ahead         = ( 4.0 * size / 3.0 ).to_i
+      @size               = texture_size * size
+      @look_ahead         = ( 4.0 * @size / 3.0 ).to_i
 
-      @position           = position.clone
+      @position           = [ position[0] * texture_size + ( texture_size >> 1 ),
+                              position[1] * texture_size + ( texture_size >> 1 ) ]
+      puts @position
       @direction          = Trigo::unit_vector_for  @angle
       @direction_normal   = Trigo::normal           @direction
     end

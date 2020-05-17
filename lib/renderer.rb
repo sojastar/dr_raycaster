@@ -250,7 +250,7 @@ module RayCaster
     # ---=== ENTITIES RENDERING : ===---
     def render_entities(player,entities)
       in_frustum_entities = cull_out_of_frustum_entities player, entities
-      z_sorted_entities   = in_frustum_entities.sort { |e1,e2| e1.view_position[1] <=> e2.view_position[1] }
+      z_sorted_entities   = in_frustum_entities.sort { |e1,e2| e2.view_position[1] <=> e1.view_position[1] }
       scan_textures_for z_sorted_entities
     end
 

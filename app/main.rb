@@ -30,6 +30,7 @@ def setup(args)
   textures              =   { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32 ),
                               plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32 ),
                               leaking_wall: RayCaster::Texture.new( 'textures/leaking_wall.png',  32 ),
+                              rocks:        RayCaster::Texture.new( 'textures/rocks.png',         32 ),
                               door:         RayCaster::Texture.new( 'textures/door.png',          32 ),
                               stone:        RayCaster::Texture.new( 'textures/stone.png',          8 ),
                               skull:        RayCaster::Texture.new( 'textures/skull.png',          8 ),
@@ -38,28 +39,58 @@ def setup(args)
                               brazier:      RayCaster::Texture.new( 'textures/brazier.png',        8 ) }
 
   # --- Map : ---
-  cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
-                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t1],
-                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
-                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:vd,:te,:te,:te,:te,:te,:t3],
-                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t1],
-                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
-                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:hd,:t2,:te,:t3],
-                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
-                            [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
-                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
-                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
-                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
-                            [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-                            [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
+  cells                 = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:do,:t1,:t1,:t1,:t1,:t1,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:do,:te,:te,:te,:do,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:t1,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:do,:te,:te,:te,:do,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:do,:t1,:t1,:t1,:t1,:t1,:t1],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te],
+                            [:t1,:ro,:t1,:t1,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:te],
+                            [:ro,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t1,:te],
+                            [:ro,:ro,:te,:te,:te,:te,:te,:do,:te,:te,:te,:te,:t1,:te,:te,:te,:ro,:ro,:te],
+                            [:te,:ro,:ro,:te,:ro,:te,:te,:t1,:te,:te,:te,:t1,:te,:t1,:te,:te,:ro,:ro,:te],
+                            [:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:do,:t1,:t1,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
+                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:te,:te] ]
+#  cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
+#                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t1],
+#                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
+#                            [:t1,:te,:te,:te,:te,:ro,:te,:te,:te,:te,:te,:do,:te,:te,:te,:te,:te,:t3],
+#                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t1],
+#                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
+#                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:do,:t2,:te,:t3],
+#                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
+#                            [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
+#                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
+#                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
+#                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
+#                            [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
+#                            [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
   blocks                = { te: { texture: nil,                     is_door: false },
                             t1: { texture: textures[:basic_wall],   is_door: false },
                             t2: { texture: textures[:plant_wall],   is_door: false },
                             t3: { texture: textures[:leaking_wall], is_door: false },
-                            vd: { texture: textures[:door],         is_door: true  },
-                            hd: { texture: textures[:door],         is_door: true  } }
-  start_x               = 2
-  start_y               = 2
+                            ro: { texture: textures[:rocks],        is_door: false },
+                            do: { texture: textures[:door],         is_door: true  } }
+  start_x               = 12#2
+  start_y               = 1#2
   args.state.map        = RayCaster::Map.new( cells,
                                               blocks,
                                               textures,
@@ -74,40 +105,79 @@ def setup(args)
                             brazier:    { texture: textures[:brazier],    colide: false, other_param: 'for later' } }
 
   # --- Scene : ---
-  placements            = [ { model: :spider_web,  position: [ 1, 1] },
-                            { model: :stone,       position: [ 6, 1] },
-                            { model: :spider_web,  position: [10, 1] },
-                            { model: :stone,       position: [ 2, 3] },
-                            { model: :slime,       position: [14, 3] },
-                            { model: :stone,       position: [ 8, 4] },
-                            { model: :brazier,     position: [ 4, 5] },
-                            { model: :brazier,     position: [ 6, 5] },
-                            { model: :spider_web,  position: [16, 5] },
-                            { model: :stone,       position: [15, 6] },
-                            { model: :brazier,     position: [ 4, 7] },
-                            { model: :brazier,     position: [ 6, 7] },
-                            { model: :stone,       position: [ 2, 9] },
-                            { model: :brazier,     position: [10, 9] },
-                            { model: :skull,       position: [14, 9] },
-                            { model: :brazier,     position: [ 9,10] },
-                            { model: :brazier,     position: [11,10] },
-                            { model: :stone,       position: [ 4,11] },
-                            { model: :brazier,     position: [10,11] },
-                            { model: :spider_web,  position: [ 1,12] },
-                            { model: :spider_web,  position: [16,12] } ]
+  placements            = [ { model: :brazier,    position: [12, 2] },
+                            { model: :skull,      position: [13, 3] },
+                            { model: :stone,      position: [ 7, 5] },
+                            { model: :brazier,    position: [16, 6] },
+                            { model: :brazier,    position: [12, 6] },
+                            { model: :brazier,    position: [ 7, 6] },
+                            { model: :skull,      position: [17, 7] },
+                            { model: :stone,      position: [11, 7] },
+                            { model: :brazier,    position: [12, 8] },
+                            { model: :stone,      position: [13, 9] },
+                            { model: :skull,      position: [ 8, 9] },
+                            { model: :brazier,    position: [16,10] },
+                            { model: :brazier,    position: [12,10] },
+                            { model: :brazier,    position: [ 8,10] },
+                            { model: :skull,      position: [17,11] },
+                            { model: :spider_web, position: [13,11] },
+                            { model: :spider_web, position: [10,14] },
+                            { model: :stone,      position: [15,15] },
+                            { model: :stone,      position: [16,16] },
+                            { model: :brazier,    position: [12,16] },
+                            { model: :stone,      position: [ 6,16] },
+                            { model: :stone,      position: [ 3,16] },
+                            { model: :stone,      position: [ 1,16] },
+                            { model: :stone,      position: [14,17] },
+                            { model: :brazier,    position: [13,17] },
+                            { model: :brazier,    position: [11,17] },
+                            { model: :stone,      position: [ 5,17] },
+                            { model: :stone,      position: [ 4,17] },
+                            { model: :skull,      position: [ 2,17] },
+                            { model: :brazier,    position: [12,18] },
+                            { model: :stone,      position: [ 8,18] },
+                            { model: :stone,      position: [ 6,18] },
+                            { model: :stone,      position: [ 3,18] },
+                            { model: :stone,      position: [15,19] },
+                            { model: :skull,      position: [10,19] },
+                            { model: :skull,      position: [15,20] },
+                            { model: :spider_web, position: [13,21] },
+                            { model: :spider_web, position: [11,21] } ]
+#  placements            = [ { model: :spider_web,  position: [ 1, 1] },
+#                            { model: :stone,       position: [ 6, 1] },
+#                            { model: :spider_web,  position: [10, 1] },
+#                            { model: :stone,       position: [ 2, 3] },
+#                            { model: :slime,       position: [14, 3] },
+#                            { model: :stone,       position: [ 8, 4] },
+#                            { model: :brazier,     position: [ 4, 5] },
+#                            { model: :brazier,     position: [ 6, 5] },
+#                            { model: :spider_web,  position: [16, 5] },
+#                            { model: :stone,       position: [15, 6] },
+#                            { model: :brazier,     position: [ 4, 7] },
+#                            { model: :brazier,     position: [ 6, 7] },
+#                            { model: :stone,       position: [ 2, 9] },
+#                            { model: :brazier,     position: [10, 9] },
+#                            { model: :skull,       position: [14, 9] },
+#                            { model: :brazier,     position: [ 9,10] },
+#                            { model: :brazier,     position: [11,10] },
+#                            { model: :stone,       position: [ 4,11] },
+#                            { model: :brazier,     position: [10,11] },
+#                            { model: :spider_web,  position: [ 1,12] },
+#                            { model: :spider_web,  position: [16,12] } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
 
 
   # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  4,                                                        # speed
-                                                  0.25,                                                     # dampening
-                                                  3.0,                                                      # angular speed
-                                                  blocks[:t1][:texture].width >> 1,                         # size
-                                                  [ blocks[:t1][:texture].width* args.state.map.start_x,    # start position x
-                                                    blocks[:t1][:texture].width* args.state.map.start_y ],  # start position y
-                                                  0.0 )                                                     # start angle
+  args.state.player     = RayCaster::Player.new(  4,                              # speed
+                                                  0.25,                           # dampening
+                                                  3.0,                            # angular speed
+                                                  blocks[:t1][:texture].width,    # texture size
+                                                  0.5,                            # size (relative to texture size)
+                                                  [ args.state.map.start_x,       # start position x
+                                                    args.state.map.start_y ],     # start position y
+                                                  90.0 )                          # start angle
 
   # --- Renderer : ---
   args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
@@ -118,7 +188,7 @@ def setup(args)
                                                     blocks[:t1][:texture].width ) # texture size
 
   # --- Lighting : ---
-  compute_lighting(args, 32, 192, 0)
+  compute_lighting(args, 32, 128, 0)
 
   # --- Miscellenaous : ---
   args.state.mode       = Debug::parse_debug_arg($gtk.argv)
