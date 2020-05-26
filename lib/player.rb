@@ -4,23 +4,26 @@ module RayCaster
 
     # ---=== INITIALIZATION : ===---
     def initialize(speed,dampening,angular_speed,texture_size,size,position,start_angle)
-      @speed              = speed
-      @current_speed      = 0.0
+      @speed                = speed
+      @strafe_speed         = 0.0
+      @forward_speed        = 0.0
 
-      @dampening          = dampening
-      @current_dampening  = dampening
+      @dampening            = dampening
 
-      @angular_speed      = angular_speed.to_radians
-      @angle              = start_angle.to_radians
+      @angular_speed        = angular_speed.to_radians
+      @angle                = start_angle.to_radians
 
-      @size               = texture_size * size
-      @look_ahead         = ( 4.0 * @size / 3.0 ).to_i
+      @size                 = texture_size * size
+      @look_ahead           = ( 4.0 * @size / 3.0 ).to_i
 
-      @position           = [ position[0] * texture_size + ( texture_size >> 1 ),
-                              position[1] * texture_size + ( texture_size >> 1 ) ]
-      puts @position
-      @direction          = Trigo::unit_vector_for  @angle
-      @direction_normal   = Trigo::normal           @direction
+      @position             = [ position[0] * texture_size + ( texture_size >> 1 ),
+                                position[1] * texture_size + ( texture_size >> 1 ) ]
+
+      @direction            = Trigo::unit_vector_for  @angle
+      @direction_normal     = Trigo::normal           @direction
+
+      @strafe_displacement  = [ 0.0, 0.0 ]
+      @forward_displacement = [ 0.0, 0.0 ]
     end
 
 
@@ -36,30 +39,45 @@ module RayCaster
     # --- Update : ---
     def update_movement(args,map)
 
-      # Direction :
-      if args.inputs.keyboard.key_held.left then
-        @angle += @angular_speed
-      elsif args.inputs.keyboard.key_held.right then
-        @angle -= @angular_speed
-      end
+      # Rotation :
+      dx_mouse  = args.state.last_mouse_position.x - args.inputs.mouse.point.x
+      @angle += @angular_speed * dx_mouse if dx_mouse.abs > 2
 
       @direction        = Trigo::unit_vector_for  @angle
       @direction_normal = Trigo::normal           @direction
 
-      # Position :
-      if args.inputs.keyboard.key_held.up then
-        @current_speed      = @speed
-        @current_dampening  = @dampening
-      elsif args.inputs.keyboard.key_held.down then
-        @current_speed      = -@speed
-        @current_dampening  = -@dampening
+      # Translation :
+      displacement_is_dirty = false
+
+      # Straff :
+      if args.inputs.keyboard.key_held.strafe_left then
+        @strafe_speed         = @speed
+        @strafe_displacement  = @direction_normal
+      elsif args.inputs.keyboard.key_held.strafe_right then
+        @strafe_speed         = @speed
+        @strafe_displacement  = @direction_normal.inverse
       end
 
-      displacement  = @direction.mul(@current_speed)
+      # Forward / backward :
+      if args.inputs.keyboard.key_held.forward then
+        @forward_speed        = @speed
+        @forward_displacement = @direction
+      elsif args.inputs.keyboard.key_held.backward then
+        @forward_speed        = @speed
+        @forward_displacement = @direction.inverse
+      end
+
+      # Clipping to displacement to walls :
+      displacement  = @forward_displacement.mul(@forward_speed).add( @strafe_displacement.mul(@strafe_speed) )
       @position     = @position.add [ clip_movement_x(map, displacement),
                                       clip_movement_y(map, displacement) ]
       # Speed dampening :
-      @current_speed -= @current_dampening if @current_speed != 0
+      @strafe_speed   = if @strafe_speed  > 0.0 then  @strafe_speed - @dampening
+                        else                          0.0
+                        end
+      @forward_speed  = if @forward_speed > 0.0 then  @forward_speed - @dampening
+                        else                          0.0
+                        end
     end
 
     # --- Clipping : ---
@@ -88,7 +106,7 @@ module RayCaster
 
     # ---=== ACTIONS : ===---
     def update_actions(args,map)
-      if  args.inputs.keyboard.key_down.e
+      if  args.inputs.keyboard.key_down.action1
         looking_at  = @position.add(@direction.mul(@look_ahead))
         cell        = map.cell_at(*looking_at)
         operate_door_at(cell) if cell[:is_door]

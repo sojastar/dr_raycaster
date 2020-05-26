@@ -29,12 +29,23 @@ module RayCaster
 
       @columns                    = []
 
-      @fisheye_correction_factors = @viewport_width.times.map do |i|
-                                      p1 = [ i - viewport_width / 2, @focal ]
-                                      p2 = [ 0.0, 0.0 ]
+      @fisheye_correction_factors = compute_fisheye_correction_factors  @viewport_width,
+                                                                        @focal
+    end
 
-                                      1.5 * @focal / Trigo::magnitude(p1, p2)
-                                    end
+    def compute_fisheye_correction_factors(viewport_width,focal)
+      viewport_width.times.map do |i|
+        p1 = [ i - viewport_width / 2, @focal ]
+        p2 = [ 0.0, 0.0 ]
+
+        1.5 * @focal / Trigo::magnitude(p1, p2)
+      end
+    end
+
+    def focal=(new_focal)
+      @focal                      = new_focal
+      @fisheye_correction_factors = compute_fisheye_correction_factors  @viewport_width,
+                                                                        @focal
     end
 
 

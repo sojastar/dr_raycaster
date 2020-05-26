@@ -3,9 +3,11 @@ require 'lib/extend_array.rb'
 require 'lib/trigo.rb'
 require 'lib/texture.rb'
 require 'lib/map.rb'
+require 'lib/cell.rb'
 require 'lib/entity.rb'
 require 'lib/scene.rb'
 require 'lib/renderer.rb'
+require 'lib/keymap.rb'
 require 'lib/player.rb'
 
 
@@ -13,11 +15,26 @@ require 'lib/player.rb'
 
 
 # ---=== CONSTANTS : ===---
+
+# --- Rendering : ---
 VIEWPORT_WIDTH  = 160
 VIEWPORT_HEIGHT = 90
 FOCAL           = 80
 NEAR            = 16 
 FAR             = 1500
+
+# --- Key Mappings : ---
+QWERTY_MAPPING  = { forward:      :w,
+                    backward:     :s,
+                    strafe_left:  :a,
+                    strafe_right: :d,
+                    action1:      :e  }
+
+AZERTY_MAPPING  = { forward:      :z,
+                    backward:     :s,
+                    strafe_left:  :q,
+                    strafe_right: :d,
+                    action1:      :e  }
 
 
 
@@ -69,28 +86,20 @@ def setup(args)
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:te,:te] ]
-#  cells                 = [ [:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3,:t1,:t2,:t3],
-#                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:t1],
-#                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
-#                            [:t1,:te,:te,:te,:te,:ro,:te,:te,:te,:te,:te,:do,:te,:te,:te,:te,:te,:t3],
-#                            [:t3,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:t1],
-#                            [:t2,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:t2],
-#                            [:t1,:te,:t1,:t3,:t2,:t1,:t2,:t3,:t1,:te,:te,:t1,:t2,:t3,:do,:t2,:te,:t3],
-#                            [:t3,:te,:te,:te,:te,:t2,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1],
-#                            [:t2,:te,:te,:te,:te,:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t2],
-#                            [:t1,:te,:te,:te,:te,:t1,:te,:te,:te,:t3,:te,:t2,:te,:te,:te,:te,:te,:t3],
-#                            [:t3,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:t1],
-#                            [:t2,:te,:te,:te,:te,:te,:te,:te,:te,:t2,:te,:t3,:te,:te,:te,:te,:te,:t2],
-#                            [:t1,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t3],
-#                            [:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1,:t3,:t2,:t1] ]
   blocks                = { te: { texture: nil,                     is_door: false },
                             t1: { texture: textures[:basic_wall],   is_door: false },
                             t2: { texture: textures[:plant_wall],   is_door: false },
                             t3: { texture: textures[:leaking_wall], is_door: false },
                             ro: { texture: textures[:rocks],        is_door: false },
                             do: { texture: textures[:door],         is_door: true  } }
-  start_x               = 12#2
-  start_y               = 1#2
+  #cells                 = { te: nil,
+  #                          t1: RayCaster::Cell.new(textures[:basic_wall],    :wall),
+  #                          t2: RayCaster::Cell.new(textures[:plant_wall],    :wall),
+  #                          t3: RayCaster::Cell.new(textures[:leaking_wall],  :wall),
+  #                          ro: RayCaster::Cell.new(textures[:rocks],         :wall),
+  #                          t1: RayCaster::Door.new(textures[:door]) }
+  start_x               = 12
+  start_y               = 1
   args.state.map        = RayCaster::Map.new( cells,
                                               blocks,
                                               textures,
@@ -143,27 +152,6 @@ def setup(args)
                             { model: :skull,      position: [15,20] },
                             { model: :spider_web, position: [13,21] },
                             { model: :spider_web, position: [11,21] } ]
-#  placements            = [ { model: :spider_web,  position: [ 1, 1] },
-#                            { model: :stone,       position: [ 6, 1] },
-#                            { model: :spider_web,  position: [10, 1] },
-#                            { model: :stone,       position: [ 2, 3] },
-#                            { model: :slime,       position: [14, 3] },
-#                            { model: :stone,       position: [ 8, 4] },
-#                            { model: :brazier,     position: [ 4, 5] },
-#                            { model: :brazier,     position: [ 6, 5] },
-#                            { model: :spider_web,  position: [16, 5] },
-#                            { model: :stone,       position: [15, 6] },
-#                            { model: :brazier,     position: [ 4, 7] },
-#                            { model: :brazier,     position: [ 6, 7] },
-#                            { model: :stone,       position: [ 2, 9] },
-#                            { model: :brazier,     position: [10, 9] },
-#                            { model: :skull,       position: [14, 9] },
-#                            { model: :brazier,     position: [ 9,10] },
-#                            { model: :brazier,     position: [11,10] },
-#                            { model: :stone,       position: [ 4,11] },
-#                            { model: :brazier,     position: [10,11] },
-#                            { model: :spider_web,  position: [ 1,12] },
-#                            { model: :spider_web,  position: [16,12] } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 placements )
@@ -172,12 +160,13 @@ def setup(args)
   # --- Player : ---
   args.state.player     = RayCaster::Player.new(  4,                              # speed
                                                   0.25,                           # dampening
-                                                  3.0,                            # angular speed
+                                                  1.0,                            # angular speed
                                                   blocks[:t1][:texture].width,    # texture size
                                                   0.5,                            # size (relative to texture size)
                                                   [ args.state.map.start_x,       # start position x
                                                     args.state.map.start_y ],     # start position y
                                                   90.0 )                          # start angle
+  args.state.view_height_ratio  = 1
 
   # --- Renderer : ---
   args.state.renderer   = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
@@ -189,6 +178,10 @@ def setup(args)
 
   # --- Lighting : ---
   compute_lighting(args, 32, 128, 0)
+
+  # --- Key Mapping : ---
+  args.state.mapping    = :qwerty
+  KeyMap::set QWERTY_MAPPING
 
   # --- Miscellenaous : ---
   args.state.mode       = Debug::parse_debug_arg($gtk.argv)
@@ -206,18 +199,48 @@ def tick(args)
   # --- Setup : ---
   setup(args) unless args.state.setup_done
 
+
   # --- Update : ---
+  
+  # Game :
   args.state.player.update  args, args.state.map
   args.state.scene.update   args, args.state.player
 
+  args.state.last_mouse_position  = args.inputs.mouse.point
+
+  # Camera :
+  args.state.renderer.focal     += 5    if args.inputs.keyboard.key_down.l
+  args.state.renderer.focal     -= 5    if args.inputs.keyboard.key_down.k
+
+  args.state.view_height_ratio  += 0.05 if args.inputs.keyboard.key_down.j
+  args.state.view_height_ratio  -= 0.05 if args.inputs.keyboard.key_down.h
+
   args.state.mode = ( args.state.mode + 1 ) % 2 if args.inputs.keyboard.key_down.space
+
+  # Key mapping selection :
+  if args.inputs.keyboard.key_down.m then
+    if args.state.mapping == :qwerty then
+      puts 'switched to azerty'
+      KeyMap::unset QWERTY_MAPPING
+      args.state.mapping  = :azerty
+      KeyMap::set   AZERTY_MAPPING
+
+    elsif args.state.mapping == :azerty then
+      puts 'switched to qwerty'
+      KeyMap::unset AZERTY_MAPPING
+      args.state.mapping  = :qwerty
+      KeyMap::set   QWERTY_MAPPING
+
+    end
+  end
+
 
   # --- Render : ---
   columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
 
+
   # --- Draw : ---
-  #if args.state.debug == 0 || args.state.debug.nil? then
   if args.state.mode == 0 || args.state.mode.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]
@@ -228,7 +251,7 @@ def tick(args)
                                   rectified_height  = layer[:height].to_i * 12
                                   lighting          = lighting_at args, layer[:distance].to_i
                                   { x:      index * 8,
-                                    y:      ( 720 - rectified_height ) >> 1,
+                                    y:      ( 720.0 - args.state.view_height_ratio * rectified_height ) / 2.0,
                                     w:      8,
                                     h:      rectified_height,
                                     path:   layer[:texture],
@@ -243,7 +266,6 @@ def tick(args)
                               end
                             end
 
-  #elsif args.state.debug == 1 then
   elsif args.state.mode == 1 then
     offset_world_space  = [20,100]
     Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
