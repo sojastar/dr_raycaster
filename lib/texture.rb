@@ -19,6 +19,10 @@ module RayCaster
       { path: @path, width: @width, offset: @offset }
     end
 
+    def clone
+      Texture.new @path, @width
+    end
+
     def inspect
       serialize.to_s
     end

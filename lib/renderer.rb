@@ -138,12 +138,12 @@ module RayCaster
           door_intersection  = intersection.add half_delta
 
           if  map.cell_x(intersection) == map.cell_x(door_intersection) &&
-              door_intersection[0] % @texture_size < map.cell_at(*intersection)[:door_offset] then
+              door_intersection[0] % @texture_size < map.cell_at(*intersection).door_offset then
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
                         texture:        map.texture_at(*door_intersection),
                         texture_select: 0,
-                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection)[:door_offset],
+                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset,
                         from:           :horizontal_ray_casting_through_door_DOOR_method }
           else
             intersection = intersection.add(delta)
@@ -218,12 +218,12 @@ module RayCaster
           door_intersection = intersection.add half_delta
 
           if  map.cell_y(intersection) == map.cell_y(door_intersection) &&
-              door_intersection[1] % @texture_size < map.cell_at(*intersection)[:door_offset] then
+              door_intersection[1] % @texture_size < map.cell_at(*intersection).door_offset then
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
                         texture:        map.texture_at(*door_intersection),
                         texture_select: 0,
-                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection)[:door_offset],
+                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset,
                         from:           :vertical_ray_casting_through_door_DOOR_method }
           else
             intersection = intersection.add(delta)

@@ -109,15 +109,15 @@ module RayCaster
       if  args.inputs.keyboard.key_down.action1
         looking_at  = @position.add(@direction.mul(@look_ahead))
         cell        = map.cell_at(*looking_at)
-        operate_door_at(cell) if cell[:is_door]
+        operate_door_at(cell) if cell.type == :door
       end
     end
 
     def operate_door_at(cell)
-      if    cell[:status] == :closed || cell[:status] == :closing then
-        cell[:status] = :opening
-      elsif cell[:status] == :open   || cell[:status] == :opening then
-        cell[:status] = :closing
+      if    cell.status == :closed || cell.status == :closing then
+        cell.status = :opening
+      elsif cell.status == :open   || cell.status == :opening then
+        cell.status = :closing
       end
     end
 

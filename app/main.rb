@@ -56,7 +56,7 @@ def setup(args)
                               brazier:      RayCaster::Texture.new( 'textures/brazier.png',        8 ) }
 
   # --- Map : ---
-  cells                 = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
+  map                   = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
@@ -86,23 +86,17 @@ def setup(args)
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:te,:te] ]
-  blocks                = { te: { texture: nil,                     is_door: false },
-                            t1: { texture: textures[:basic_wall],   is_door: false },
-                            t2: { texture: textures[:plant_wall],   is_door: false },
-                            t3: { texture: textures[:leaking_wall], is_door: false },
-                            ro: { texture: textures[:rocks],        is_door: false },
-                            do: { texture: textures[:door],         is_door: true  } }
-  #cells                 = { te: nil,
-  #                          t1: RayCaster::Cell.new(textures[:basic_wall],    :wall),
-  #                          t2: RayCaster::Cell.new(textures[:plant_wall],    :wall),
-  #                          t3: RayCaster::Cell.new(textures[:leaking_wall],  :wall),
-  #                          ro: RayCaster::Cell.new(textures[:rocks],         :wall),
-  #                          t1: RayCaster::Door.new(textures[:door]) }
+  cells                 = { te: RayCaster::Cell.new(nil,                      :empty),
+                            t1: RayCaster::Cell.new(textures[:basic_wall],    :wall),
+                            t2: RayCaster::Cell.new(textures[:plant_wall],    :wall),
+                            t3: RayCaster::Cell.new(textures[:leaking_wall],  :wall),
+                            ro: RayCaster::Cell.new(textures[:rocks],         :wall),
+                            do: RayCaster::Door.new(textures[:door]) }
   start_x               = 12
   start_y               = 1
-  args.state.map        = RayCaster::Map.new( cells,
-                                              blocks,
-                                              textures,
+  args.state.map        = RayCaster::Map.new( map,
+                                              cells,
+                                              textures[:basic_wall].width,
                                               start_x,
                                               start_y )
 

@@ -10,30 +10,24 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map,blocks,textures,start_x,start_y)
+    def initialize(map,cells,texture_size,start_x,start_y)
       # Map :
-      @texture_size = blocks[:t1][:texture].width
+      @texture_size = texture_size#cells[:t1].texture.width
 
-      @blocks       = blocks
+      @cell_types   = cells
       @doors        = []
       @cells        = map.map do |line|
-                        line.map do |block|
-                          new_cell = @blocks[block].clone
-                          if new_cell[:is_door] then
-                            new_cell[:status]       = :closed # possible status: closed, closing, open, opening
-                            new_cell[:door_offset]  = @texture_size
-                            @doors << new_cell
-                          end
+                        line.map do |cell|
+                          new_cell = @cell_types[cell].clone
+                          @doors << new_cell if new_cell.type == :door
                           new_cell
                         end
                       end
 
-      @texture_size = blocks[:t1][:texture].width
-
       @width        = @cells.first.length
       @height       = @cells.length
-      @pixel_width  = @width  * @blocks[:t1][:texture].width
-      @pixel_height = @height * @blocks[:t1][:texture].width
+      @pixel_width  = @width  * @texture_size
+      @pixel_height = @height * @texture_size
 
       # Spawn position :
       @start_x      = start_x
@@ -41,7 +35,7 @@ module RayCaster
     end
 
     def set_block_at(x,y,identifier)
-      @cells[y][x]  = @blocks[identifier].clone
+      @cells[y][x]  = @block_types[identifier].clone
     end
 
 
@@ -72,7 +66,6 @@ module RayCaster
 
     # ---=== ACCESSORS : ===---
     def [](x,y)     @cells[y][x]            end
-    def []=(x,y,v)  @cells[y][x] = v.clone  end
 
     def cell_at(x,y)
       cell_x      = clip_x(x.floor.to_i / @texture_size)
@@ -82,28 +75,28 @@ module RayCaster
     end
 
     def is_empty_at?(x,y)
-      cell_at(x,y)[:texture].nil?
+      cell_at(x,y).type == :empty
     end
 
     def has_wall_at?(x,y)
-      !cell_at(x,y)[:texture].nil?
+      !cell_at(x,y).texture.nil?
     end
 
     def texture_at(x,y)
-      cell_at(x,y)[:texture].nil? ? nil : cell_at(x,y)[:texture].path
+      cell_at(x,y).texture.nil? ? nil : cell_at(x,y).texture.path
     end
 
     def has_door_at?(x,y)
-      !cell_at(x,y).nil? && cell_at(x,y)[:is_door]
+      !cell_at(x,y).nil? && cell_at(x,y).type == :door
     end
 
     def cant_pass_through?(x,y)
       cell = cell_at(x,y)
 
-      if cell[:is_door] then
-        cell[:door_offset] > @texture_size >> 2
+      if cell.type == :door then
+        cell.door_offset > @texture_size >> 2
       else
-        !cell_at(x,y)[:texture].nil?
+        !cell_at(x,y).texture.nil?
       end
     end
 
@@ -115,14 +108,14 @@ module RayCaster
 
     def update_doors
       @doors.each do |door|
-        case door[:status]
+        case door.status
         when :opening
-          door[:door_offset] -= 1
-          door[:status] = :open if door[:door_offset] == 0 
+          door.door_offset -= 1
+          door.status = :open if door.door_offset == 0 
 
         when :closing
-          door[:door_offset] += 1
-          door[:status] = :closed if door[:door_offset] == @texture_size
+          door.door_offset += 1
+          door.status = :closed if door.door_offset == @texture_size
 
         end
       end
