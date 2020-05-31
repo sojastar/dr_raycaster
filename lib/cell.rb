@@ -33,6 +33,19 @@ module RayCaster
       @door_offset  = door_offset == -1 ? texture.width : door_offset
     end
 
+    def update
+      case @status
+      when :opening
+        @door_offset -= 1
+        @status = :open if @door_offset == 0 
+
+      when :closing
+        @door_offset += 1
+        @status = :closed if @door_offset == @texture_size
+
+      end
+    end
+
     def clone
       Door.new @texture, @status, @door_offset
     end

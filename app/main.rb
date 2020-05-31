@@ -155,7 +155,7 @@ def setup(args)
   args.state.player     = RayCaster::Player.new(  4,                              # speed
                                                   0.25,                           # dampening
                                                   1.0,                            # angular speed
-                                                  blocks[:t1][:texture].width,    # texture size
+                                                  textures[:basic_wall].width,    # texture size
                                                   0.5,                            # size (relative to texture size)
                                                   [ args.state.map.start_x,       # start position x
                                                     args.state.map.start_y ],     # start position y
@@ -168,7 +168,7 @@ def setup(args)
                                                     FOCAL,
                                                     NEAR,
                                                     FAR,
-                                                    blocks[:t1][:texture].width ) # texture size
+                                                    textures[:basic_wall].width ) # texture size
 
   # --- Lighting : ---
   compute_lighting(args, 32, 128, 0)

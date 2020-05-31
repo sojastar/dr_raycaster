@@ -12,8 +12,7 @@ module RayCaster
     # ---=== INITIALIZATION : ===---
     def initialize(map,cells,texture_size,start_x,start_y)
       # Map :
-      @texture_size = texture_size#cells[:t1].texture.width
-
+      @texture_size = texture_size
       @cell_types   = cells
       @doors        = []
       @cells        = map.map do |line|
@@ -107,18 +106,7 @@ module RayCaster
     end
 
     def update_doors
-      @doors.each do |door|
-        case door.status
-        when :opening
-          door.door_offset -= 1
-          door.status = :open if door.door_offset == 0 
-
-        when :closing
-          door.door_offset += 1
-          door.status = :closed if door.door_offset == @texture_size
-
-        end
-      end
+      @doors.each { |door| door.update() }
     end
 
 
