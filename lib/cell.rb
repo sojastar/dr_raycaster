@@ -8,7 +8,15 @@ module RayCaster
     end
 
     def clone
-      Cell.new(@texture, @type)
+      Cell.new(@texture.nil? ? nil : @texture.clone, @type)
+    end
+
+    def is_animated?
+      !@texture.nil? && @texture.is_animated?
+    end
+
+    def update
+      @texture.update unless @texture.nil?
     end
 
     def serialize
@@ -31,6 +39,7 @@ module RayCaster
       super texture, :door
       @status       = status
       @door_offset  = door_offset == -1 ? texture.width : door_offset
+      @texture_size = texture.width
     end
 
     def update

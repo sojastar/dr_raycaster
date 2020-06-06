@@ -44,23 +44,33 @@ def setup(args)
   args.gtk.log_level = :off
 
   # --- Textures : ---
-  textures              =   { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32 ),
-                              plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32 ),
-                              leaking_wall: RayCaster::Texture.new( 'textures/leaking_wall.png',  32 ),
-                              rocks:        RayCaster::Texture.new( 'textures/rocks.png',         32 ),
-                              door:         RayCaster::Texture.new( 'textures/door.png',          32 ),
-                              stone:        RayCaster::Texture.new( 'textures/stone.png',          8 ),
-                              skull:        RayCaster::Texture.new( 'textures/skull.png',          8 ),
-                              spider_web:   RayCaster::Texture.new( 'textures/spider_web.png',    16 ),
-                              slime:        RayCaster::Texture.new( 'textures/slime.png',         32 ),
-                              brazier:      RayCaster::Texture.new( 'textures/brazier.png',        8 ) }
+  leak                  = { frames:             [[0,0],[1,0],[2,0],[3,0]],
+                            mode:               :loop,
+                            speed:              6,
+                            flip_horizontally:  false,
+                            flip_vertically:    false }
+  glow                  = { frames:             [[0,0],[1,0],[2,0]],
+                            mode:               :pingpong,
+                            speed:              12,
+                            flip_horizontally:  false,
+                            flip_vertically:    false }
+  textures              = { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32, 32 ),
+                            plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32, 32 ),
+                            leaking_wall: RayCaster::Texture.new( 'textures/leaking_wall.png',  32, 32, { leak: leak } ),
+                            rocks:        RayCaster::Texture.new( 'textures/rocks.png',         32, 32 ),
+                            door:         RayCaster::Texture.new( 'textures/door.png',          32, 32 ),
+                            stone:        RayCaster::Texture.new( 'textures/stone.png',          8, 32 ),
+                            skull:        RayCaster::Texture.new( 'textures/skull.png',          8, 32 ),
+                            spider_web:   RayCaster::Texture.new( 'textures/spider_web.png',    16, 32 ),
+                            slime:        RayCaster::Texture.new( 'textures/slime.png',         32, 32 ),
+                            brazier:      RayCaster::Texture.new( 'textures/brazier.png',       10, 32, { glow: glow } ) }
 
   # --- Map : ---
   map                   = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
                             [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:do,:t1,:t1,:t1,:t1,:t1,:t1],
+                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t3,:do,:t3,:t1,:t1,:t1,:t1,:t1],
                             [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
                             [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:do,:te,:te,:te,:do,:te,:te,:te,:t1],
                             [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
@@ -241,18 +251,18 @@ def tick(args)
 
     args.outputs.sprites << columns.map.with_index do |column,index|
                               column.map do |layer|
-                                unless layer[:texture].nil? then
+                                unless layer[:texture_path].nil? then
                                   rectified_height  = layer[:height].to_i * 12
                                   lighting          = lighting_at args, layer[:distance].to_i
                                   { x:      index * 8,
                                     y:      ( 720.0 - args.state.view_height_ratio * rectified_height ) / 2.0,
                                     w:      8,
                                     h:      rectified_height,
-                                    path:   layer[:texture],
+                                    path:   layer[:texture_path],
                                     r:      lighting,
                                     g:      lighting,
                                     b:      lighting,
-                                    tile_x: layer[:texture_offset] + layer[:texture_select],
+                                    tile_x: layer[:texture_offset],
                                     tile_y: 0,
                                     tile_w: 1,
                                     tile_h: 32 }
@@ -266,10 +276,6 @@ def tick(args)
     Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
     Debug::render_wall_hits        columns,                                   offset_world_space
     Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
-
-    #offset_view_space   = [700, 500]
-    #Debug::render_view_space                                offset_view_space
-    #Debug::render_entities_in_view_space  args.state.scene, offset_view_space 
 
   end
 end

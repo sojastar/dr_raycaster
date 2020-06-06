@@ -24,7 +24,7 @@ module RayCaster
     # ---=== UPDATE : ===---
     def update(args,player)
       @map.update args
-      #@entities.each { |entity| entity.update args, @map, player }
+      @entities.each { |entity| entity.update args, @map, player }
     end
 
 

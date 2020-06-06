@@ -25,6 +25,10 @@ module RayCaster
                           dx * player.direction[0] + dy * player.direction[1] ]
     end
 
+    def update(args,map,player)
+      @texture.update if @texture.is_animated?
+    end
+
     def serialize
       { position: @world_position, texture: @texture }
     end

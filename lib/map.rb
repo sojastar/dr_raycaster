@@ -1,8 +1,5 @@
 module RayCaster
   class Map
-    HORIZONTAL  = :horizontal
-    VERTICAL    = :vertical
-
     attr_reader   :width, :height,
                   :texture_size,
                   :pixel_width, :pixel_height,
@@ -12,25 +9,27 @@ module RayCaster
     # ---=== INITIALIZATION : ===---
     def initialize(map,cells,texture_size,start_x,start_y)
       # Map :
-      @texture_size = texture_size
-      @cell_types   = cells
-      @doors        = []
-      @cells        = map.map do |line|
-                        line.map do |cell|
-                          new_cell = @cell_types[cell].clone
-                          @doors << new_cell if new_cell.type == :door
-                          new_cell
+      @texture_size   = texture_size
+      @cell_types     = cells
+      @doors          = []
+      @animated_cells = []
+      @cells          = map.map do |line|
+                          line.map do |cell|
+                            new_cell = @cell_types[cell].clone
+                            @doors          << new_cell if new_cell.type == :door
+                            @animated_cells << new_cell if new_cell.is_animated?
+                            new_cell
+                          end
                         end
-                      end
 
-      @width        = @cells.first.length
-      @height       = @cells.length
-      @pixel_width  = @width  * @texture_size
-      @pixel_height = @height * @texture_size
+      @width          = @cells.first.length
+      @height         = @cells.length
+      @pixel_width    = @width  * @texture_size
+      @pixel_height   = @height * @texture_size
 
       # Spawn position :
-      @start_x      = start_x
-      @start_y      = start_y
+      @start_x        = start_x
+      @start_y        = start_y
     end
 
     def set_block_at(x,y,identifier)
@@ -82,7 +81,7 @@ module RayCaster
     end
 
     def texture_at(x,y)
-      cell_at(x,y).texture.nil? ? nil : cell_at(x,y).texture.path
+      cell_at(x,y).texture.nil? ? nil : cell_at(x,y).texture
     end
 
     def has_door_at?(x,y)
@@ -102,7 +101,12 @@ module RayCaster
 
     # ---=== UPDATE : ===---
     def update(args)
+      update_cells_animations
       update_doors
+    end
+
+    def update_cells_animations
+      @animated_cells.each { |cell| cell.update }
     end
 
     def update_doors

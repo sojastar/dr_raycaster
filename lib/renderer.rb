@@ -4,8 +4,7 @@ module RayCaster
     MAX_DISTANCE  = 64000
     NO_HIT        = { distance:       MAX_DISTANCE,
                       intersection:   [0.0, 0.0],
-                      texture:        nil,
-                      texture_select: 0,
+                      texture_path:   nil,
                       texture_offset: 0 }
 
     attr_reader :viewport_width, :viewport_height, :focal
@@ -74,7 +73,7 @@ module RayCaster
 
         @columns[ray_index] = h_hit[:distance] > v_hit[:distance] ? [ v_hit ] : [ h_hit ]
 
-        unless @columns[ray_index].first[:texture].nil? then
+        unless @columns[ray_index].first[:texture_path].nil? then
           @columns[ray_index].first[:height]  = @viewport_texture_factor / ( @columns[ray_index].first[:distance] * @fisheye_correction_factors[ray_index] )   # the wall is ALWAYS the FIRST layer of a rendering column
         end
 
@@ -141,10 +140,8 @@ module RayCaster
               door_intersection[0] % @texture_size < map.cell_at(*intersection).door_offset then
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
-                        texture:        map.texture_at(*door_intersection),
-                        texture_select: 0,
-                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset,
-                        from:           :horizontal_ray_casting_through_door_DOOR_method }
+                        texture_path:   map.texture_at(*door_intersection).path,
+                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
           else
             intersection = intersection.add(delta)
           end
@@ -167,10 +164,8 @@ module RayCaster
 
       { distance:       Trigo::magnitude(player.position, intersection),
         intersection:   intersection,
-        texture:        texture,
-        texture_select: texture_select,
-        texture_offset: intersection[0].to_i % @texture_size,
-        from:           :horizontal_ray_casting_method }
+        texture_path:   texture.path,
+        texture_offset: texture_select + intersection[0].to_i % @texture_size + texture.tile_x }
     end
 
     def vertical_ray_casting_setup(map,player,ray)
@@ -221,10 +216,8 @@ module RayCaster
               door_intersection[1] % @texture_size < map.cell_at(*intersection).door_offset then
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
-                        texture:        map.texture_at(*door_intersection),
-                        texture_select: 0,
-                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset,
-                        from:           :vertical_ray_casting_through_door_DOOR_method }
+                        texture_path:   map.texture_at(*door_intersection).path,
+                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
           else
             intersection = intersection.add(delta)
           end
@@ -247,10 +240,8 @@ module RayCaster
 
       { distance:       Trigo::magnitude(player.position, intersection),
         intersection:   intersection,
-        texture:        texture,
-        texture_select: texture_select,
-        texture_offset: intersection[1].to_i % @texture_size,
-        from:           :vertical_ray_casting_method }
+        texture_path:   texture.path,
+        texture_offset: texture_select + intersection[1].to_i % @texture_size + texture.tile_x }
     end
 
     def is_outside_map?(map,intersection)
@@ -298,9 +289,8 @@ module RayCaster
           if entity.view_position[1] < @columns[x].first[:distance] then  # the first element of a hit is ALWAYS a wall
             height  = @viewport_texture_factor / ( entity.view_position[1] * @fisheye_correction_factors[x] )
             @columns[x] <<  { distance:       entity.view_position[1],
-                              texture:        entity.texture.path,
-                              texture_select: 0,
-                              texture_offset: ( ( x - projected_left_bound ) * texture_step ).round,
+                              texture_path:   entity.texture.path,
+                              texture_offset: ( ( x - projected_left_bound ) * texture_step ).round + entity.texture.tile_x,
                               height:         height }
           end
         end
