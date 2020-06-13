@@ -239,7 +239,7 @@ def tick(args)
   end
 
 
-  # --- Render : ---
+ 9 # --- Render : ---
   columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
 
