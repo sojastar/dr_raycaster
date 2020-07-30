@@ -7,6 +7,7 @@ require 'lib/cell.rb'
 require 'lib/entity.rb'
 require 'lib/scene.rb'
 require 'lib/renderer.rb'
+require 'lib/slice.rb'
 require 'lib/keymap.rb'
 require 'lib/player.rb'
 
@@ -254,18 +255,18 @@ def tick(args)
                                 unless layer[:texture_path].nil? then
                                   rectified_height  = layer[:height].to_i * 12
                                   lighting          = lighting_at args, layer[:distance].to_i
-                                  { x:      index * 8,
-                                    y:      ( 720.0 - args.state.view_height_ratio * rectified_height ) / 2.0,
-                                    w:      8,
-                                    h:      rectified_height,
-                                    path:   layer[:texture_path],
-                                    r:      lighting,
-                                    g:      lighting,
-                                    b:      lighting,
-                                    tile_x: layer[:texture_offset],
-                                    tile_y: 0,
-                                    tile_w: 1,
-                                    tile_h: 32 }
+                                  RayCaster::Slice.new( index * 8,
+                                                        ( 720.0 - args.state.view_height_ratio * rectified_height ) / 2.0,
+                                                        8,
+                                                        rectified_height,
+                                                        layer[:texture_path],
+                                                        lighting,
+                                                        lighting,
+                                                        lighting,
+                                                        layer[:texture_offset],
+                                                        0,
+                                                        1,
+                                                        32 )
                                 end
                               end
                             end
