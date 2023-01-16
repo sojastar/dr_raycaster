@@ -24,6 +24,8 @@ module RayCaster
 
       @strafe_displacement  = [ 0.0, 0.0 ]
       @forward_displacement = [ 0.0, 0.0 ]
+
+      @last_mouse_x         = 0
     end
 
 
@@ -40,8 +42,10 @@ module RayCaster
     def update_movement(args,map)
 
       # Rotation :
-      dx_mouse  = args.state.last_mouse_position.x - args.inputs.mouse.point.x
-      @angle += @angular_speed * dx_mouse if dx_mouse.abs > 2
+      dx_mouse  = @last_mouse_x - args.inputs.mouse.point.x
+      @angle   += @angular_speed * dx_mouse if dx_mouse.abs > 2
+
+      @last_mouse_x = args.inputs.mouse.point.x
 
       @direction        = Trigo::unit_vector_for  @angle
       @direction_normal = Trigo::normal           @direction

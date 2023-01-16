@@ -211,8 +211,6 @@ def tick(args)
   args.state.player.update  args, args.state.map
   args.state.scene.update   args, args.state.player
 
-  args.state.last_mouse_position  = args.inputs.mouse.point
-
   # Camera :
   args.state.renderer.focal     += 5    if args.inputs.keyboard.key_down.l
   args.state.renderer.focal     -= 5    if args.inputs.keyboard.key_down.k
@@ -240,12 +238,12 @@ def tick(args)
   end
 
 
- 9 # --- Render : ---
+  # --- Render : ---
   columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
 
 
-  # --- Draw : ---
+  ## --- Draw : ---
   if args.state.mode == 0 || args.state.mode.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]
