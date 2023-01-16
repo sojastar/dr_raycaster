@@ -275,8 +275,8 @@ module RayCaster
     def scan_textures_for(entities)
       entities.each do |entity|
         # Scanning parameters :
-        projected_left_bound  =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] + entity.texture.half_width ).to_f / entity.view_position[1] ).to_i
-        projected_right_bound =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] - entity.texture.half_width ).to_f / entity.view_position[1] ).to_i
+        projected_left_bound  =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] + entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
+        projected_right_bound =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] - entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
         projected_width       = projected_right_bound - projected_left_bound 
         texture_step          = entity.texture.width.to_f / projected_width
 
