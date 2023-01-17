@@ -189,8 +189,9 @@ def setup(args)
   KeyMap::set QWERTY_MAPPING
 
   # --- Miscellenaous : ---
+  args.state.mode       = 0
   args.state.mode       = Debug::parse_debug_arg($gtk.argv)
-
+  args.state.last_mouse_position  = args.inputs.mouse.point
   args.state.setup_done = true
 end
 
