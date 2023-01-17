@@ -273,7 +273,7 @@ def tick(args)
     offset_world_space  = [20,100]
     Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
     Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
-    Debug::render_wall_hits        columns,                                   offset_world_space
+    #Debug::render_wall_hits        columns,                                   offset_world_space
     Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
 
   end

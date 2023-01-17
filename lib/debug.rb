@@ -29,7 +29,7 @@ module Debug
     blocks  = []
     map.height.times do |y|
       map.width.times do |x|
-        texture = map[x,y][:texture]
+        texture = map[x,y].texture
         blocks << ( [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] << texture.path ) unless texture.nil?
       end
     end
