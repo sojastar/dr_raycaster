@@ -65,14 +65,15 @@ module Debug
   
   def self.render_wall_hits(columns,offset)
     columns.each do |column|
-      color = case column.first[:from]
-              when :horizontal_ray_casting_method                   then [ 255, 0, 0, 255 ]
-              when :horizontal_ray_casting_through_door_DOOR_method then [ 0, 255, 0, 255 ]
-              when :horizontal_ray_casting_through_door_WALL_method then [ 0, 0, 255, 255 ]
-              when :vertical_ray_casting_method                     then [ 255, 0, 0, 255 ]
-              when :vertical_ray_casting_through_door_DOOR_method   then [ 0, 255, 0, 255 ]
-              when :vertical_ray_casting_through_door_WALL_method   then [ 0, 0, 255, 255 ]
-              end
+      color = [ 255, 0, 0, 255 ]
+      #color = case column.first[:from]
+      #        when :horizontal_ray_casting_method                   then [ 255, 0, 0, 255 ]
+      #        when :horizontal_ray_casting_through_door_DOOR_method then [ 0, 255, 0, 255 ]
+      #        when :horizontal_ray_casting_through_door_WALL_method then [ 0, 0, 255, 255 ]
+      #        when :vertical_ray_casting_method                     then [ 255, 0, 0, 255 ]
+      #        when :vertical_ray_casting_through_door_DOOR_method   then [ 0, 255, 0, 255 ]
+      #        when :vertical_ray_casting_through_door_WALL_method   then [ 0, 0, 255, 255 ]
+      #        end
       draw_cross(column.first[:intersection].add(offset), 1, color)
     end
   end
