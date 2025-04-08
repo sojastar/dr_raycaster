@@ -5,82 +5,54 @@ module RayCaster
                 :offset,
                 :frame_index, :current_clip,
                 :tile_x, :tile_y,
-                :flip_x, :flip_y
+                :flip_x, :flip_y,
+                :frames, :is_animated
 
 
     # --- INITIALIZATION : ---
-    def initialize(path,width,height,clips=nil,start_frame=-1)
-      @path       = path
+    def initialize(path,width,height,frames,mode,speed)
+      @path = path
 
-      @width        = width
-      @height       = height
+      @width      = width
+      @half_width = width >> 1
+      @height     = height
 
-      @half_width   = width >> 1
-      @offset       = 0
+      @frames       = frames
+      @max_frame    = frames.length == 1 ? -1 : frames.length - 1
+      @frame_index  = 0
+      @mode         = mode.nil? ? :not_animated : mode
+      @speed        = speed
+      @tile_x       = @frames[0][0] * @width
+      @tile_y       = @frames[0][1] * @height
+      @flip_x       = false
+      @flip_y       = false
 
-      @clips        = clips
-      if @clips.nil? then
-        @current_clip = nil
-        @max_frame    = -1
-        @frame_index  = 0
-        @mode         = -1
-        @tile_x       = 0
-        @tile_y       = 0
-        @flip_x       = false
-        @flip_y       = false
-      else
-        @current_clip = @clips[@clips.keys.first]
-        @max_frame    = @current_clip[:frames].length - 1
-        @frame_index  = start_frame == -1 ? rand(@max_frame) : start_frame
-        @mode         = @current_clip[:mode]
-        @tile_x       = @current_clip[:frames][0][0] * @width
-        @tile_y       = @current_clip[:frames][0][1] * @height
-        @flip_x       = @current_clip[:flip_x]
-        @flip_y       = @current_clip[:flip_y]
-      end
-
+      @is_animated  = frames.length > 1
       @count_dir    = :up
       @tick         = 0
     end
 
     def clone
-      Texture.new @path, @width, @height, @clips
+      Texture.new @path,
+                  @width,
+                  @height,
+                  @frames, 
+                  ( @mode == :not_animated ? nil : @mode ),
+                  @speed
     end
 
 
     # --- ANIMATION : ---
-    def is_animated?
-      !@clips.nil?
-    end
-
-    def reset_clip
-      @frame_index  = 0
-      @tick         = 0
-      @tile_x       = @current_clip[:frames][0][0] * @width
-      @tile_y       = @current_clip[:frames][0][1] * @height
-    end
-
-    def set_clip(clip,start_frame=-1)
-      @current_clip = @clips[clip]
-      @max_frame    = @current_clip[:frames].length - 1
-      @frame_index  = start_frame == -1 ? rand(@max_frame) : start_frame
-      @mode         = @current_clip[:mode] 
-      @tile_x       = @current_clip[:frames][0][0] * @width
-      @tile_y       = @current_clip[:frames][0][1] * @height
-      @flip_x       = @current_clip[:flip_x]
-      @flip_y       = @current_clip[:flip_y]
-    end
-
     def set_frame(frame_index)
       @tick         = 0
       @frame_index  = frame_index < @max_frame ? frame_index : @max_frame
     end
 
     def update
-      @tick = ( @tick + 1 ) % @current_clip[:speed]
+      @tick = ( @tick + 1 ) % @speed
 
       if @tick == 0 then
-        case @current_clip[:mode]
+        case @mode
         when :single
           @frame_index += 1
           @frame_index  = @max_frame if @frame_index >= @max_frame
@@ -91,7 +63,7 @@ module RayCaster
         when :pingpong
           if @count_dir == :up then
             @frame_index += 1
-            @count_dir    = :down   if @frame_index == @max_frame
+            @count_dir    = :down   if @frame_index == @max_frame - 1
 
           elsif @count_dir == :down then
             @frame_index -= 1
@@ -102,14 +74,14 @@ module RayCaster
         end 
       end
 
-      @tile_x       = @current_clip[:frames][@frame_index][0] * @width
-      @tile_y       = @current_clip[:frames][@frame_index][1] * @height
+      @tile_x       = @frames[@frame_index][0] * @width
+      @tile_y       = @frames[@frame_index][1] * @height
     end
 
 
     # --- SERIALIZATION : ---
     def serialize
-      { path: @path, width: @width, height: @height, offset: @offset, is_animated: is_animated? }
+      { path: @path, width: @width, height: @height, is_animated: is_animated? }
     end
 
     def inspect

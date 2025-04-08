@@ -12,11 +12,13 @@ module RayCaster
     end
 
     def is_animated?
-      !@texture.nil? && @texture.is_animated?
+      !@texture.nil? && @texture.is_animated
     end
 
     def update
-      @texture.update unless @texture.nil?
+      if !@texture.nil? && @texture.is_animated
+        @texture.update
+      end
     end
 
     def serialize

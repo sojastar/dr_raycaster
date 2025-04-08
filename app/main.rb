@@ -21,8 +21,43 @@ require 'lib/player.rb'
 VIEWPORT_WIDTH  = 160
 VIEWPORT_HEIGHT = 90
 FOCAL           = 80
-NEAR            = 16 
+NEAR            = 16
 FAR             = 1500
+
+# --- Textures : ---
+TEXTURE_SIZE  = 1 << 5
+
+TEXTURES  = { basic_wall:   { width:  TEXTURE_SIZE,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 0, 0 ] ] },
+              plant_wall:   { width:  TEXTURE_SIZE,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 6, 0 ] ] },
+              leaking_wall: { width:  TEXTURE_SIZE,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 3, 0 ], [ 4, 0 ], [ 5, 0 ] ],
+                              mode:   :loop,
+                              speed:  12 },
+              rocks:        { width:  TEXTURE_SIZE,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 7, 0 ] ] },
+              door:         { width:  TEXTURE_SIZE,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 1, 0 ] ] },
+              stone:        { width:  TEXTURE_SIZE >> 2,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 35, 0 ] ] },
+              skull:        { width:  TEXTURE_SIZE >> 2,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 36, 0 ] ] },
+              spider_web:   { width:  TEXTURE_SIZE >> 1,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 16, 0 ] ] },
+              brazier:      { width:  TEXTURE_SIZE >> 1,
+                              height: TEXTURE_SIZE,
+                              frames: [ [ 18, 0 ], [ 19, 0 ], [ 20, 0 ] ],
+                              mode:   :pingpong,
+                              speed:  12 } }
 
 # --- Key Mappings : ---
 QWERTY_MAPPING  = { forward:      :w,
@@ -45,26 +80,17 @@ def setup(args)
   args.gtk.log_level = :off
 
   # --- Textures : ---
-  leak                  = { frames:             [[0,0],[1,0],[2,0],[3,0]],
-                            mode:               :loop,
-                            speed:              6,
-                            flip_horizontally:  false,
-                            flip_vertically:    false }
-  glow                  = { frames:             [[0,0],[1,0],[2,0]],
-                            mode:               :pingpong,
-                            speed:              12,
-                            flip_horizontally:  false,
-                            flip_vertically:    false }
-  textures              = { basic_wall:   RayCaster::Texture.new( 'textures/basic_wall.png',    32, 32 ),
-                            plant_wall:   RayCaster::Texture.new( 'textures/plant_wall.png',    32, 32 ),
-                            leaking_wall: RayCaster::Texture.new( 'textures/leaking_wall.png',  32, 32, { leak: leak } ),
-                            rocks:        RayCaster::Texture.new( 'textures/rocks.png',         32, 32 ),
-                            door:         RayCaster::Texture.new( 'textures/door.png',          32, 32 ),
-                            stone:        RayCaster::Texture.new( 'textures/stone.png',          8, 32 ),
-                            skull:        RayCaster::Texture.new( 'textures/skull.png',          8, 32 ),
-                            spider_web:   RayCaster::Texture.new( 'textures/spider_web.png',    16, 32 ),
-                            slime:        RayCaster::Texture.new( 'textures/slime.png',         32, 32 ),
-                            brazier:      RayCaster::Texture.new( 'textures/brazier.png',       10, 32, { glow: glow } ) }
+  textures  = TEXTURES.to_a
+                      .map { |name,data|
+                        [ name,
+                          RayCaster::Texture.new( 'textures/textures.png',
+                                                  data[:width],
+                                                  data[:height],
+                                                  data[:frames],
+                                                  data[:mode],
+                                                  data[:speed] ) ]
+                      }
+                      .to_h
 
   # --- Map : ---
   map                   = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
@@ -107,7 +133,7 @@ def setup(args)
   start_y               = 1
   args.state.map        = RayCaster::Map.new( map,
                                               cells,
-                                              textures[:basic_wall].width,
+                                              TEXTURE_SIZE,
                                               start_x,
                                               start_y )
 
@@ -185,8 +211,10 @@ def setup(args)
   compute_lighting(args, 32, 128, 0)
 
   # --- Key Mapping : ---
-  args.state.mapping    = :qwerty
-  KeyMap::set QWERTY_MAPPING
+  #args.state.mapping    = :qwerty
+  args.state.mapping    = :azerty
+  #KeyMap::set QWERTY_MAPPING
+  KeyMap::set AZERTY_MAPPING
 
   # --- Miscellenaous : ---
   args.state.mode       = Debug::parse_debug_arg($gtk.argv)

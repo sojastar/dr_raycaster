@@ -26,7 +26,7 @@ module RayCaster
     end
 
     def update(args,map,player)
-      @texture.update if @texture.is_animated?
+      @texture.update if @texture.is_animated
     end
 
     def serialize

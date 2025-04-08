@@ -141,7 +141,7 @@ module RayCaster
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
                         texture_path:   map.texture_at(*door_intersection).path,
-                        texture_offset: door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
+                        texture_offset: map.texture_at(*door_intersection).frames[0][0] * @texture_size + door_intersection[0].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
           else
             intersection = intersection.add(delta)
           end
@@ -217,7 +217,7 @@ module RayCaster
               return  { distance:       Trigo::magnitude(player.position, door_intersection),
                         intersection:   door_intersection,
                         texture_path:   map.texture_at(*door_intersection).path,
-                        texture_offset: door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
+                        texture_offset: map.texture_at(*door_intersection).frames[0][0] * @texture_size + door_intersection[1].to_i % @texture_size + @texture_size - map.cell_at(*intersection).door_offset }
           else
             intersection = intersection.add(delta)
           end
@@ -300,11 +300,11 @@ module RayCaster
 
     # ---=== SERIALIZATION : ===---
     def serialize
-      { viewport_width:   viewport_width,
-        viewport_height:  viewport_height,
-        focal:            focal,
-        near:             near,
-        far:              far }
+      { viewport_width:   @viewport_width,
+        viewport_height:  @viewport_height,
+        focal:            @focal,
+        near:             @near,
+        far:              @far }
     end
 
     def inspect
