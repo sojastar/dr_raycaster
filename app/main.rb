@@ -24,8 +24,15 @@ FOCAL           = 80
 NEAR            = 16
 FAR             = 1500
 
+MAX_SPRITES = 500
+SLICE_WIDTH = $gtk.args.grid.right / VIEWPORT_WIDTH
+
+MAX_LIGHT = (1 << 8) - 1
+
 # --- Textures : ---
 TEXTURE_SIZE  = 1 << 5
+
+TEXTURE_FILE  = 'textures/textures.png'
 
 TEXTURES  = { basic_wall:   { width:  TEXTURE_SIZE,
                               height: TEXTURE_SIZE,
@@ -83,7 +90,7 @@ def setup(args)
   textures  = TEXTURES.to_a
                       .map { |name,data|
                         [ name,
-                          RayCaster::Texture.new( 'textures/textures.png',
+                          RayCaster::Texture.new( TEXTURE_FILE,
                                                   data[:width],
                                                   data[:height],
                                                   data[:frames],
@@ -207,6 +214,23 @@ def setup(args)
                                                     FAR,
                                                     textures[:basic_wall].width ) # texture size
 
+  slices  = MAX_SPRITES.times.map do
+              RayCaster::Slice.new  -SLICE_WIDTH,   # x
+                                    0,              # y
+                                    SLICE_WIDTH,    # width
+                                    0,              # height
+                                    TEXTURE_FILE,   # path
+                                    MAX_LIGHT,      # red
+                                    MAX_LIGHT,      # green
+                                    MAX_LIGHT,      # blue
+                                    0,              # source_x
+                                    0,              # source_y
+                                    0,              # source_w
+                                    0               # source_h
+            end
+  args.state.slices = slices
+  args.outputs.static_sprites << slices
+
   # --- Lighting : ---
   compute_lighting(args, 32, 128, 0)
 
@@ -270,32 +294,39 @@ def tick(args)
   columns = args.state.renderer.render  args.state.scene,
                                         args.state.player
 
-
   ## --- Draw : ---
   if args.state.mode == 0 || args.state.mode.nil? then
     args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
                               [0, 360, 1279, 720, 50, 50, 50, 255] ]
 
-    args.outputs.sprites << columns.map.with_index do |column,index|
-                              column.map do |layer|
-                                unless layer[:texture_path].nil? then
-                                  rectified_height  = layer[:height].to_i * 12
-                                  lighting          = lighting_at args, layer[:distance].to_i
-                                  RayCaster::Slice.new( index * 8,
-                                                        ( 720.0 - args.state.view_height_ratio * rectified_height ) / 2.0,
-                                                        8,
-                                                        rectified_height,
-                                                        layer[:texture_path],
-                                                        lighting,
-                                                        lighting,
-                                                        lighting,
-                                                        layer[:texture_offset],
-                                                        0,
-                                                        1,
-                                                        32 )
-                                end
-                              end
-                            end
+    slice_count = 0
+    columns.each.with_index do |column,index|
+      column.each do |layer|
+        #unless layer[:texture_path].nil? then
+          slice = args.state.slices[slice_count]
+          rectified_height  = layer[:height].to_i * 12
+          lighting          = lighting_at args, layer[:distance].to_i
+
+          slice.x         = SLICE_WIDTH * index
+          slice.y         = ( args.grid.top - args.state.view_height_ratio * rectified_height ) / 2.0
+          slice.w         = SLICE_WIDTH
+          slice.h         = rectified_height
+          slice.r         = lighting
+          slice.g         = lighting
+          slice.b         = lighting
+          slice.source_x  = layer[:texture_offset_x]
+          slice.source_y  = layer[:texture_offset_y]
+          slice.source_w  = 1
+          slice.source_h  = TEXTURE_SIZE
+
+          slice.should_draw
+
+          slice_count += 1
+        #end
+      end
+    end
+
+    slice_count.upto(MAX_SPRITES - 1) { |i| args.state.slices[i].should_not_draw }
 
   elsif args.state.mode == 1 then
     offset_world_space  = [20,100]
@@ -321,11 +352,11 @@ def compute_lighting(args,full_light_distance,min_light_distance,min_light)
   
   # Gradient :
   args.state.lighting[:gradient]            = []
-  a = ( 255.0 - min_light ) / ( full_light_distance - min_light_distance )
-  b = 255 - a * full_light_distance
+  a = ( MAX_LIGHT.to_f - min_light ) / ( full_light_distance - min_light_distance )
+  b = MAX_LIGHT - a * full_light_distance
   min_light_distance.times do |distance|
     if distance < full_light_distance then
-      args.state.lighting[:gradient][distance]  = 255
+      args.state.lighting[:gradient][distance]  = MAX_LIGHT
     else
       args.state.lighting[:gradient][distance]  = a * distance + b
     end
