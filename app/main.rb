@@ -1,3 +1,6 @@
+# ---=== IMPORTS : ===---
+
+# --- Raycasting Engine : ---
 require 'lib/debug.rb'
 require 'lib/extend_array.rb'
 require 'lib/trigo.rb'
@@ -11,6 +14,11 @@ require 'lib/renderer.rb'
 require 'lib/slice.rb'
 require 'lib/keymap.rb'
 require 'lib/player.rb'
+
+# --- Game Data : ---
+
+
+# --- Game Logic : --- 
 
 
 
@@ -230,7 +238,7 @@ def setup(args)
   KeyMap::set AZERTY_MAPPING
 
   # --- Miscellenaous : ---
-  args.state.mode       = 1#Debug::parse_debug_arg($gtk.argv)
+  args.state.mode       = Debug::parse_debug_arg($gtk.argv)
 
   args.state.setup_done = true
 end

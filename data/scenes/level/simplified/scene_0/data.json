@@ -1,0 +1,31 @@
+{
+	"identifier": "scene_0",
+	"uniqueIdentifer": "fec83c31-1030-11f0-b056-97a011eb5306",
+	"x": 0,
+	"y": 0,
+	"width": 1024,
+	"height": 1024,
+	"bgColor": "#696A79",
+	"neighbourLevels": [],
+	"customFields" : {},
+	"layers": [
+		"walls.png"
+	],
+	"entities": {
+		"stone": [
+			{
+				"id": "stone",
+				"iid": "a9cd58f0-1030-11f0-b056-275cbc9cacf6",
+				"layer": "props",
+				"x": 368,
+				"y": 688,
+				"width": 8,
+				"height": 32,
+				"color": 12748137,
+				"customFields": {
+					"frames": []
+				}
+			}
+		]
+	}
+}
