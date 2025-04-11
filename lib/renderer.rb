@@ -7,25 +7,46 @@ module RayCaster
                       texture_path:   nil,
                       texture_offset: 0 }
 
-    attr_reader :viewport_width, :viewport_height, :focal
+    attr_accessor :window_height, :view_height_ratio
+
+    attr_reader :viewport_width, :viewport_height, :focal,
+                :columns
 
 
     # ---=== INITIALIZATION : ===---
     def initialize(viewport_width,viewport_height,focal,near,far,texture_size)
-      @viewport_width             = viewport_width
-      @viewport_half_width        = viewport_width >> 1 
-      @viewport_height            = viewport_height
+      @window_height  = $gtk.args.grid.top
 
-      @focal                      = focal
-      @frustum_slope              = @viewport_half_width.to_f / focal 
+      @viewport_width       = viewport_width
+      @viewport_half_width  = viewport_width >> 1 
+      @viewport_height      = viewport_height
 
-      @near                       = near
-      @far                        = far
+      @focal          = focal
+      @frustum_slope  = @viewport_half_width.to_f / focal 
 
-      @texture_size               = texture_size
-      @viewport_texture_factor    = @viewport_height * @texture_size
+      @near = near
+      @far  = far
 
-      @columns                    = []
+      @texture_size             = texture_size
+      @viewport_texture_factor  = @viewport_height * @texture_size
+      @view_height_ratio        = 1
+
+      @columns  = []
+      @slices   = MAX_SPRITES.times.map do
+                    RayCaster::Slice.new  -SLICE_WIDTH,   # x
+                                          0,              # y
+                                          SLICE_WIDTH,    # width
+                                          0,              # height
+                                          TEXTURE_FILE,   # path
+                                          MAX_LIGHT,      # red
+                                          MAX_LIGHT,      # green
+                                          MAX_LIGHT,      # blue
+                                          0,              # source_x
+                                          0,              # source_y
+                                          0,              # source_w
+                                          0               # source_h
+                  end
+      $gtk.args.outputs.static_sprites << @slices
 
       @fisheye_correction_factors = compute_fisheye_correction_factors  @viewport_width,
                                                                         @focal
@@ -52,7 +73,33 @@ module RayCaster
       cast_wall_rays  player, scene.map 
       render_entities player, scene.entities
 
-      @columns
+      slice_count = 0
+      @columns.each.with_index do |column,index|
+        column.each do |layer|
+          slice = @slices[slice_count]
+
+          rectified_height  = layer[:height].to_i * 12
+          lighting          = RayCaster::Lighting::at layer[:distance].to_i
+
+          slice.x         = SLICE_WIDTH * index
+          slice.y         = ( @window_height - @view_height_ratio * rectified_height ) / 2.0
+          slice.w         = SLICE_WIDTH
+          slice.h         = rectified_height
+          slice.r         = lighting
+          slice.g         = lighting
+          slice.b         = lighting
+          slice.source_x  = layer[:texture_offset_x]
+          slice.source_y  = layer[:texture_offset_y]
+          slice.source_w  = 1
+          slice.source_h  = TEXTURE_SIZE
+
+          slice.should_draw
+
+          slice_count += 1
+        end
+      end
+
+      slice_count.upto(MAX_SPRITES - 1) { |i| @slices[i].should_not_draw }
     end
 
 
