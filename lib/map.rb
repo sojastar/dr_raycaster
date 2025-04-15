@@ -2,12 +2,12 @@ module RayCaster
   class Map
     attr_reader   :width, :height,
                   :texture_size,
-                  :pixel_width, :pixel_height,
-                  :start_x, :start_y
+                  :pixel_width, :pixel_height#,
+                  #:start_x, :start_y
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map,cells,texture_size,start_x,start_y)
+    def initialize(map,cells,texture_size)#,start_x,start_y)
       # Map :
       @texture_size   = texture_size
       @cell_types     = cells
@@ -28,8 +28,8 @@ module RayCaster
       @pixel_height   = @height * @texture_size
 
       # Spawn position :
-      @start_x        = start_x
-      @start_y        = start_y
+      #@start_x        = start_x
+      #@start_y        = start_y
     end
 
     def set_block_at(x,y,identifier)
@@ -117,8 +117,8 @@ module RayCaster
     # ---=== SERIALIZATION : ===---
     def serialize
       { cells:    @cells,
-        start_x:  @start_x,
-        start_y:  @start_y,
+        #start_x:  @start_x,
+        #start_y:  @start_y,
         blocks:   @blocks }
     end
 

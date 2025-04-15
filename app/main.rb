@@ -99,15 +99,14 @@ def setup(args)
                       }
                       .to_h
 
-  # --- Map : ---
+  # --- Level Data : ---
   ldtk_data = args.gtk.parse_json_file(LDTK_FILE)
   levels    = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
 
-  args.state.map        = RayCaster::Map.new( levels.first[:cells],
-                                              cells,
-                                              Game::TEXTURE_SIZE,
-                                              levels.first[:start][0],
-                                              levels.first[:start][1] )
+  # --- Map : ---
+  args.state.map  = RayCaster::Map.new( levels.first[:cells],
+                                        cells,
+                                        Game::TEXTURE_SIZE )
 
   # --- Entities : ---
   models  = Game::ENTITIES.to_a
@@ -128,7 +127,6 @@ def setup(args)
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
                                                 levels.first[:entities] )
-
 
   # --- Player : ---
   args.state.player     = RayCaster::Player.new(  4,                              # speed
@@ -196,13 +194,11 @@ def tick(args)
   # Key mapping selection :
   if args.inputs.keyboard.key_down.m then
     if args.state.mapping == :qwerty then
-      puts 'switched to azerty'
       KeyMap::unset QWERTY_MAPPING
       args.state.mapping  = :azerty
       KeyMap::set   AZERTY_MAPPING
 
     elsif args.state.mapping == :azerty then
-      puts 'switched to qwerty'
       KeyMap::unset AZERTY_MAPPING
       args.state.mapping  = :qwerty
       KeyMap::set   QWERTY_MAPPING
