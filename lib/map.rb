@@ -13,8 +13,8 @@ module RayCaster
       @cell_types     = cells
       @doors          = []
       @animated_cells = []
-      @cells          = map.map do |line|
-                          line.map do |cell|
+      @cells          = map.map do |row|
+                          row.map do |cell|
                             new_cell = @cell_types[cell].clone
                             @doors          << new_cell if new_cell.type == :door
                             @animated_cells << new_cell if new_cell.is_animated?

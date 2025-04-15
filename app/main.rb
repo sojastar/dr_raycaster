@@ -16,7 +16,11 @@ require 'lib/keymap.rb'
 require 'lib/player.rb'
 
 # --- Game Data : ---
+require 'lib/LDtk_bridge.rb'
 
+require 'data/texture_data.rb'
+require 'data/cell_data.rb'
+require 'data/entity_data.rb'
 
 # --- Game Logic : --- 
 
@@ -41,43 +45,6 @@ MIN_LIGHT           = 0
 FULL_LIGHT_DISTANCE = 32
 MIN_LIGHT_DISTANCE  = 128
 
-# --- Textures : ---
-TEXTURE_SIZE  = 1 << 5
-
-TEXTURE_FILE  = 'textures/textures.png'
-
-TEXTURES  = { basic_wall:   { width:  TEXTURE_SIZE,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 0, 0 ] ] },
-              plant_wall:   { width:  TEXTURE_SIZE,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 6, 0 ] ] },
-              leaking_wall: { width:  TEXTURE_SIZE,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 3, 0 ], [ 4, 0 ], [ 5, 0 ] ],
-                              mode:   :loop,
-                              speed:  12 },
-              rocks:        { width:  TEXTURE_SIZE,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 7, 0 ] ] },
-              door:         { width:  TEXTURE_SIZE,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 1, 0 ] ] },
-              stone:        { width:  TEXTURE_SIZE >> 2,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 35, 0 ] ] },
-              skull:        { width:  TEXTURE_SIZE >> 2,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 36, 0 ] ] },
-              spider_web:   { width:  TEXTURE_SIZE >> 1,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 16, 0 ] ] },
-              brazier:      { width:  TEXTURE_SIZE >> 1,
-                              height: TEXTURE_SIZE,
-                              frames: [ [ 18, 0 ], [ 19, 0 ], [ 20, 0 ] ],
-                              mode:   :pingpong,
-                              speed:  12 } }
-
 # --- Key Mappings : ---
 QWERTY_MAPPING  = { forward:      :w,
                     backward:     :s,
@@ -91,120 +58,76 @@ AZERTY_MAPPING  = { forward:      :z,
                     strafe_right: :d,
                     action1:      :e  }
 
+# --- Game Data : ---
+LDTK_FILE = 'data/maps/map.ldtk'
+
+
 
 
 
 # ---=== SETUP : ===---
 def setup(args)
-  args.gtk.log_level = :off
-
+  
   # --- Textures : ---
-  textures  = TEXTURES.to_a
-                      .map { |name,data|
-                        [ name,
-                          RayCaster::Texture.new( TEXTURE_FILE,
-                                                  data[:width],
-                                                  data[:height],
-                                                  data[:frames],
-                                                  data[:mode],
-                                                  data[:speed] ) ]
+  textures  = Game::TEXTURES.to_a
+                            .map { |name,data|
+                              [ name,
+                                RayCaster::Texture.new( Game::TEXTURE_FILE,
+                                                        data[:width],
+                                                        data[:height],
+                                                        data[:frames],
+                                                        data[:mode],
+                                                        data[:speed] ) ]
+                            }
+                            .to_h
+
+  # --- Cells : ---
+  cells  = Game::CELLS.to_a
+                      .map { |cell_data|
+                        name    = cell_data[0]
+                        texture = textures[cell_data[1][:texture]]
+                        type    = cell_data[1][:type]
+
+                        case type
+                        when :empty
+                          [ name, RayCaster::Cell.new(nil, type) ]
+                        when :door
+                          [ name, RayCaster::Door.new(texture) ]
+                        else
+                          [ name, RayCaster::Cell.new(texture, type) ]
+                        end
                       }
                       .to_h
 
   # --- Map : ---
-  map                   = [ [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t3,:do,:t3,:t1,:t1,:t1,:t1,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:do,:te,:te,:te,:do,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:t1,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:do,:te,:te,:te,:do,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:te,:te,:t1],
-                            [:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:do,:t1,:t1,:t1,:t1,:t1,:t1],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te],
-                            [:t1,:ro,:t1,:t1,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:te],
-                            [:ro,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:t1,:te],
-                            [:ro,:ro,:te,:te,:te,:te,:te,:do,:te,:te,:te,:te,:t1,:te,:te,:te,:ro,:ro,:te],
-                            [:te,:ro,:ro,:te,:ro,:te,:te,:t1,:te,:te,:te,:t1,:te,:t1,:te,:te,:ro,:ro,:te],
-                            [:te,:te,:t1,:t1,:t1,:t1,:t1,:t1,:t1,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:t1,:t1,:t1,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:do,:t1,:t1,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:te,:t1,:te,:te,:te,:te,:te],
-                            [:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:te,:t1,:t1,:t1,:te,:te,:te,:te,:te] ]
-  cells                 = { te: RayCaster::Cell.new(nil,                      :empty),
-                            t1: RayCaster::Cell.new(textures[:basic_wall],    :wall),
-                            t2: RayCaster::Cell.new(textures[:plant_wall],    :wall),
-                            t3: RayCaster::Cell.new(textures[:leaking_wall],  :wall),
-                            ro: RayCaster::Cell.new(textures[:rocks],         :wall),
-                            do: RayCaster::Door.new(textures[:door]) }
-  start_x               = 12
-  start_y               = 1
-  args.state.map        = RayCaster::Map.new( map,
+  ldtk_data = args.gtk.parse_json_file(LDTK_FILE)
+  levels    = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
+
+  args.state.map        = RayCaster::Map.new( levels.first[:cells],
                                               cells,
-                                              TEXTURE_SIZE,
-                                              start_x,
-                                              start_y )
+                                              Game::TEXTURE_SIZE,
+                                              levels.first[:start][0],
+                                              levels.first[:start][1] )
 
   # --- Entities : ---
-  models                = { stone:      { texture: textures[:stone],      colide: false, other_param: 'for later' },
-                            skull:      { texture: textures[:skull],      colide: false, other_param: 'for later' },
-                            spider_web: { texture: textures[:spider_web], colide: false, other_param: 'for later' },
-                            slime:      { texture: textures[:slime],      colide: false, other_param: 'for later' },
-                            brazier:    { texture: textures[:brazier],    colide: false, other_param: 'for later' } }
+  models  = Game::ENTITIES.to_a
+                          .map { |entity_data|
+                            type          = entity_data[0]
+                            texture       = textures[entity_data[1][:texture]]
+                            colide        = entity_data[1][:colide]
+                            other_params  = entity_data[1][:other_params]
+
+                            [ type,
+                              { texture:      texture,
+                                colide:       colide,
+                                other_params: other_params } ]
+                          }
+                          .to_h
 
   # --- Scene : ---
-  placements            = [ { model: :brazier,    position: [12, 2] },
-                            { model: :skull,      position: [13, 3] },
-                            { model: :stone,      position: [ 7, 5] },
-                            { model: :brazier,    position: [16, 6] },
-                            { model: :brazier,    position: [12, 6] },
-                            { model: :brazier,    position: [ 7, 6] },
-                            { model: :skull,      position: [17, 7] },
-                            { model: :stone,      position: [11, 7] },
-                            { model: :brazier,    position: [12, 8] },
-                            { model: :stone,      position: [13, 9] },
-                            { model: :skull,      position: [ 8, 9] },
-                            { model: :brazier,    position: [16,10] },
-                            { model: :brazier,    position: [12,10] },
-                            { model: :brazier,    position: [ 8,10] },
-                            { model: :skull,      position: [17,11] },
-                            { model: :spider_web, position: [13,11] },
-                            { model: :spider_web, position: [10,14] },
-                            { model: :stone,      position: [15,15] },
-                            { model: :stone,      position: [16,16] },
-                            { model: :brazier,    position: [12,16] },
-                            { model: :stone,      position: [ 6,16] },
-                            { model: :stone,      position: [ 3,16] },
-                            { model: :stone,      position: [ 1,16] },
-                            { model: :stone,      position: [14,17] },
-                            { model: :brazier,    position: [13,17] },
-                            { model: :brazier,    position: [11,17] },
-                            { model: :stone,      position: [ 5,17] },
-                            { model: :stone,      position: [ 4,17] },
-                            { model: :skull,      position: [ 2,17] },
-                            { model: :brazier,    position: [12,18] },
-                            { model: :stone,      position: [ 8,18] },
-                            { model: :stone,      position: [ 6,18] },
-                            { model: :stone,      position: [ 3,18] },
-                            { model: :stone,      position: [15,19] },
-                            { model: :skull,      position: [10,19] },
-                            { model: :skull,      position: [15,20] },
-                            { model: :spider_web, position: [13,21] },
-                            { model: :spider_web, position: [11,21] } ]
   args.state.scene      = RayCaster::Scene.new( args.state.map,
                                                 models,
-                                                placements )
+                                                levels.first[:entities] )
 
 
   # --- Player : ---
@@ -213,8 +136,8 @@ def setup(args)
                                                   1.0,                            # angular speed
                                                   textures[:basic_wall].width,    # texture size
                                                   0.5,                            # size (relative to texture size)
-                                                  [ args.state.map.start_x,       # start position x
-                                                    args.state.map.start_y ],     # start position y
+                                                  [ levels.first[:start][0],
+                                                    levels.first[:start][1] ],
                                                   90.0 )                          # start angle
 
   # --- Lighting : ---
@@ -229,6 +152,7 @@ def setup(args)
                                                   FOCAL,
                                                   NEAR,
                                                   FAR,
+                                                  Game::TEXTURE_FILE,
                                                   textures[:basic_wall].width ) # texture size
 
   # --- Key Mapping : ---

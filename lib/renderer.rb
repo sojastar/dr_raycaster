@@ -14,7 +14,7 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(viewport_width,viewport_height,focal,near,far,texture_size)
+    def initialize(viewport_width,viewport_height,focal,near,far,texture_file,texture_size)
       @window_height  = $gtk.args.grid.top
 
       @viewport_width       = viewport_width
@@ -31,13 +31,16 @@ module RayCaster
       @viewport_texture_factor  = @viewport_height * @texture_size
       @view_height_ratio        = 1
 
+      @texture_file   = texture_file
+      @texture_size   = texture_size
+
       @columns  = []
       @slices   = MAX_SPRITES.times.map do
                     RayCaster::Slice.new  -SLICE_WIDTH,   # x
                                           0,              # y
                                           SLICE_WIDTH,    # width
                                           0,              # height
-                                          TEXTURE_FILE,   # path
+                                          @texture_file,  # path
                                           MAX_LIGHT,      # red
                                           MAX_LIGHT,      # green
                                           MAX_LIGHT,      # blue
@@ -91,7 +94,7 @@ module RayCaster
           slice.source_x  = layer[:texture_offset_x]
           slice.source_y  = layer[:texture_offset_y]
           slice.source_w  = 1
-          slice.source_h  = TEXTURE_SIZE
+          slice.source_h  = @texture_size
 
           slice.should_draw
 
@@ -327,7 +330,7 @@ module RayCaster
         # Scanning parameters :
         projected_left_bound  =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] + entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
         projected_right_bound =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] - entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
-        projected_width       = projected_right_bound - projected_left_bound 
+        projected_width       = projected_right_bound - projected_left_bound + 2 # + 2 ?!?!?!
         texture_step          = entity.texture.width.to_f / projected_width
 
         # Clipping :

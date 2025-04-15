@@ -4,13 +4,15 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map, models, placements)
+    def initialize(map,models,entities)
       @map      = map
 
       @models   = models
 
-      @entities = placements.map do |placement|
-                    RayCaster::Entity.new map, placement[:position], @models[placement[:model]] 
+      @entities = entities.map do |entity|
+                    RayCaster::Entity.new map,
+                                          entity[:position],
+                                          @models[entity[:model]]
                   end
     end
 

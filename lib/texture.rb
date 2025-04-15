@@ -4,7 +4,6 @@ module RayCaster
                 :width, :half_width,
                 :offset,
                 :frame_index, :current_clip,
-                #:tile_x, :tile_y,
                 :flip_x, :flip_y,
                 :source_x, :source_y,
                 :frames, :is_animated
@@ -23,8 +22,6 @@ module RayCaster
       @frame_index  = 0
       @mode         = mode.nil? ? :not_animated : mode
       @speed        = speed
-      #@tile_x       = @frames[0][0] * @width
-      #@tile_y       = @frames[0][1] * @height
       @source_x     = @frames[0][0] * @width
       @source_y     = @frames[0][1] * @height
       @flip_x       = false
