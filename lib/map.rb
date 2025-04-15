@@ -2,20 +2,19 @@ module RayCaster
   class Map
     attr_reader   :width, :height,
                   :texture_size,
-                  :pixel_width, :pixel_height#,
-                  #:start_x, :start_y
+                  :pixel_width, :pixel_height
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map,cells,texture_size)#,start_x,start_y)
+    def initialize(map,cell_types,texture_size)
       # Map :
       @texture_size   = texture_size
-      @cell_types     = cells
+      @cell_types     = cell_types
       @doors          = []
       @animated_cells = []
       @cells          = map.map do |row|
-                          row.map do |cell|
-                            new_cell = @cell_types[cell].clone
+                          row.map do |cell_type|
+                            new_cell = @cell_types[cell_type].clone
                             @doors          << new_cell if new_cell.type == :door
                             @animated_cells << new_cell if new_cell.is_animated?
                             new_cell
@@ -26,10 +25,6 @@ module RayCaster
       @height         = @cells.length
       @pixel_width    = @width  * @texture_size
       @pixel_height   = @height * @texture_size
-
-      # Spawn position :
-      #@start_x        = start_x
-      #@start_y        = start_y
     end
 
     def set_block_at(x,y,identifier)

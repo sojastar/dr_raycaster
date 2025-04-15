@@ -82,22 +82,22 @@ def setup(args)
                             .to_h
 
   # --- Cells : ---
-  cells  = Game::CELLS.to_a
-                      .map { |cell_data|
-                        name    = cell_data[0]
-                        texture = textures[cell_data[1][:texture]]
-                        type    = cell_data[1][:type]
+  cell_types  = Game::CELLS.to_a
+                            .map { |cell_data|
+                              name    = cell_data[0]
+                              texture = textures[cell_data[1][:texture]]
+                              type    = cell_data[1][:type]
 
-                        case type
-                        when :empty
-                          [ name, RayCaster::Cell.new(nil, type) ]
-                        when :door
-                          [ name, RayCaster::Door.new(texture) ]
-                        else
-                          [ name, RayCaster::Cell.new(texture, type) ]
-                        end
-                      }
-                      .to_h
+                              case type
+                              when :empty
+                                [ name, RayCaster::Cell.new(nil, type) ]
+                              when :door
+                                [ name, RayCaster::Door.new(texture) ]
+                              else
+                                [ name, RayCaster::Cell.new(texture, type) ]
+                              end
+                            }
+                            .to_h
 
   # --- Level Data : ---
   ldtk_data = args.gtk.parse_json_file(LDTK_FILE)
@@ -105,7 +105,7 @@ def setup(args)
 
   # --- Map : ---
   args.state.map  = RayCaster::Map.new( levels.first[:cells],
-                                        cells,
+                                        cell_types,
                                         Game::TEXTURE_SIZE )
 
   # --- Entities : ---
