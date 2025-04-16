@@ -67,76 +67,33 @@ LDTK_FILE = 'data/maps/map.ldtk'
 
 # ---=== SETUP : ===---
 def setup(args)
-  
-  # --- Textures : ---
-  textures  = Game::TEXTURES.to_a
-                            .map { |name,data|
-                              [ name,
-                                RayCaster::Texture.new( Game::TEXTURE_FILE,
-                                                        data[:width],
-                                                        data[:height],
-                                                        data[:frames],
-                                                        data[:mode],
-                                                        data[:speed] ) ]
-                            }
-                            .to_h
-
-  # --- Cells : ---
-  cell_types  = Game::CELLS.to_a
-                            .map { |cell_data|
-                              name    = cell_data[0]
-                              texture = textures[cell_data[1][:texture]]
-                              type    = cell_data[1][:type]
-
-                              case type
-                              when :empty
-                                [ name, RayCaster::Cell.new(nil, type) ]
-                              when :door
-                                [ name, RayCaster::Door.new(texture) ]
-                              else
-                                [ name, RayCaster::Cell.new(texture, type) ]
-                              end
-                            }
-                            .to_h
 
   # --- Level Data : ---
-  ldtk_data = args.gtk.parse_json_file(LDTK_FILE)
-  levels    = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
+  ldtk_data         = args.gtk.parse_json_file(LDTK_FILE)
+  args.state.levels = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
 
   # --- Map : ---
   args.state.map  = RayCaster::Map.new( levels.first[:cells],
-                                        cell_types,
-                                        Game::TEXTURE_SIZE )
-
-  # --- Entities : ---
-  models  = Game::ENTITIES.to_a
-                          .map { |entity_data|
-                            type          = entity_data[0]
-                            texture       = textures[entity_data[1][:texture]]
-                            colide        = entity_data[1][:colide]
-                            other_params  = entity_data[1][:other_params]
-
-                            [ type,
-                              { texture:      texture,
-                                colide:       colide,
-                                other_params: other_params } ]
-                          }
-                          .to_h
+                                        Game::CELLS,
+                                        Game::TEXTURES,
+                                        Game::TEXTURE_FILE )
 
   # --- Scene : ---
   args.state.scene      = RayCaster::Scene.new( args.state.map,
-                                                models,
-                                                levels.first[:entities] )
+                                                levels.first[:entities],
+                                                Game::ENTITIES,
+                                                Game::TEXTURES,
+                                                Game::TEXTURE_FILE )
 
   # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  4,                              # speed
-                                                  0.25,                           # dampening
-                                                  1.0,                            # angular speed
-                                                  textures[:basic_wall].width,    # texture size
-                                                  0.5,                            # size (relative to texture size)
+  args.state.player     = RayCaster::Player.new(  4,                            # speed
+                                                  0.25,                         # dampening
+                                                  1.0,                          # angular speed
+                                                  Game::TEXTURE_SIZE,           # texture size
+                                                  0.5,                          # size (relative to texture size)
                                                   [ levels.first[:start][0],
                                                     levels.first[:start][1] ],
-                                                  90.0 )                          # start angle
+                                                  90.0 )                        # start angle
 
   # --- Lighting : ---
   RayCaster::Lighting::compute( FULL_LIGHT_DISTANCE,
@@ -151,7 +108,7 @@ def setup(args)
                                                   NEAR,
                                                   FAR,
                                                   Game::TEXTURE_FILE,
-                                                  textures[:basic_wall].width ) # texture size
+                                                  Game::TEXTURE_SIZE ) # texture size
 
   # --- Key Mapping : ---
   #args.state.mapping    = :qwerty

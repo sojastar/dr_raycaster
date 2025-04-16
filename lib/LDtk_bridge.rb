@@ -60,7 +60,7 @@ module LDtk
   def self.entity_layer_to_entity_positions(layer)
     layer['entityInstances'].map { |entity|
       if entity['__identifier'] != 'start'
-        { model: entity['__identifier'].to_sym,
+        { type:     entity['__identifier'].to_sym,
           position: entity['__grid'] }
 
       else

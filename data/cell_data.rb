@@ -5,10 +5,4 @@ module Game
             leaking_wall: { texture: :leaking_wall,  type: :wall  },
             rocks:        { texture: :rocks,         type: :wall  },
             door:         { texture: :door,          type: :door  } }
-  #CELLS = { te: RayCaster::Cell.new(nil,                      :empty),
-  #          t1: RayCaster::Cell.new(textures[:basic_wall],    :wall),
-  #          t2: RayCaster::Cell.new(textures[:plant_wall],    :wall),
-  #          t3: RayCaster::Cell.new(textures[:leaking_wall],  :wall),
-  #          ro: RayCaster::Cell.new(textures[:rocks],         :wall),
-  #          do: RayCaster::Door.new(textures[:door]) }
 end

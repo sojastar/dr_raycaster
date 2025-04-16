@@ -4,15 +4,20 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map,models,entities)
-      @map      = map
+    def initialize(map,entities,entity_types,texture_types,texture_file)
+      @map  = map
 
-      @models   = models
+      @entity_types   = entity_types
+      @texture_types  = texture_types
+      @texture_file   = texture_file
 
       @entities = entities.map do |entity|
-                    RayCaster::Entity.new map,
-                                          entity[:position],
-                                          @models[entity[:model]]
+                    RayCaster::Entity.new   map,
+                                            entity[:type],
+                                            entity[:position],
+                                            entity_types,
+                                            texture_types,
+                                            texture_file
                   end
     end
 
@@ -32,7 +37,7 @@ module RayCaster
 
     # ---=== SERIALIZATION : ===---
     def serialize
-      { map: @map.to_s, models: @models, entities: @entities.length }
+      { map: @map.to_s, entities: @entities.length }
     end
 
     def inspect

@@ -6,17 +6,45 @@ module RayCaster
 
 
     # ---=== INITIALIZATION : ===---
-    def initialize(map,cell_types,texture_size)
-      # Map :
-      @texture_size   = texture_size
+    def initialize(map,cell_types,texture_types,texture_file)
+      @texture_types  = texture_types
+      @texture_file   = texture_file
+      @texture_size   = texture_types[texture_types.keys.first].width
+      
       @cell_types     = cell_types
+
       @doors          = []
       @animated_cells = []
+
       @cells          = map.map do |row|
                           row.map do |cell_type|
-                            new_cell = @cell_types[cell_type].clone
-                            @doors          << new_cell if new_cell.type == :door
-                            @animated_cells << new_cell if new_cell.is_animated?
+                            case cell_type
+                            when :empty
+                              new_cell    = RayCaster::Cell.new(nil, cell_type)
+
+                            when :door
+                              new_texture = RayCaster::Texture.new( @texture_file,
+                                                                    @texture_types[cell_type][:width],
+                                                                    @texture_types[cell_type][:height],
+                                                                    @texture_types[cell_type][:frames] )
+                              new_cell    = RayCaster::Door.new(new_texture)
+
+                              @doors << new_cell
+
+                            else
+                              new_texture = RayCaster::Texture.new( @texture_file,
+                                                                    @texture_types[cell_type][:width],
+                                                                    @texture_types[cell_type][:height],
+                                                                    @texture_types[cell_type][:frames],
+                                                                    @texture_types[cell_type][:mode],
+                                                                    @texture_types[cell_type][:speed] )
+                              type        = @cell_types[cell_type][:type]
+                              new_cell    = RayCaster::Cell.new(new_texture, type)
+
+                              @animated_cells << new_cell if new_cell.is_animated?
+
+                            end
+
                             new_cell
                           end
                         end
@@ -27,9 +55,9 @@ module RayCaster
       @pixel_height   = @height * @texture_size
     end
 
-    def set_block_at(x,y,identifier)
-      @cells[y][x]  = @block_types[identifier].clone
-    end
+    #def set_block_at(x,y,identifier)
+    #  @cells[y][x]  = @block_types[identifier].clone
+    #end
 
 
     # ---=== PIXEL AND TILE COORDINATES CONVERSIONS : ===---
@@ -112,8 +140,6 @@ module RayCaster
     # ---=== SERIALIZATION : ===---
     def serialize
       { cells:    @cells,
-        #start_x:  @start_x,
-        #start_y:  @start_y,
         blocks:   @blocks }
     end
 

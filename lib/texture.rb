@@ -10,7 +10,7 @@ module RayCaster
 
 
     # --- INITIALIZATION : ---
-    def initialize(path,width,height,frames,mode,speed)
+    def initialize(path,width,height,frames,mode=nil,speed=0)
       @path = path
 
       @width      = width
