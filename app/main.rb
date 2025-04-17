@@ -73,14 +73,14 @@ def setup(args)
   args.state.levels = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
 
   # --- Map : ---
-  args.state.map  = RayCaster::Map.new( levels.first[:cells],
+  args.state.map  = RayCaster::Map.new( args.state.levels.first[:cells],
                                         Game::CELLS,
                                         Game::TEXTURES,
                                         Game::TEXTURE_FILE )
 
   # --- Scene : ---
   args.state.scene      = RayCaster::Scene.new( args.state.map,
-                                                levels.first[:entities],
+                                               args.state.levels.first[:entities],
                                                 Game::ENTITIES,
                                                 Game::TEXTURES,
                                                 Game::TEXTURE_FILE )
@@ -91,8 +91,8 @@ def setup(args)
                                                   1.0,                          # angular speed
                                                   Game::TEXTURE_SIZE,           # texture size
                                                   0.5,                          # size (relative to texture size)
-                                                  [ levels.first[:start][0],
-                                                    levels.first[:start][1] ],
+                                                  [ args.state.levels.first[:start][0],
+                                                    args.state.levels.first[:start][1] ],
                                                   90.0 )                        # start angle
 
   # --- Lighting : ---

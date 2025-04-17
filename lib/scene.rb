@@ -11,20 +11,23 @@ module RayCaster
       @texture_types  = texture_types
       @texture_file   = texture_file
 
-      @entities = entities.map do |entity|
-                    RayCaster::Entity.new   map,
-                                            entity[:type],
-                                            entity[:position],
-                                            entity_types,
-                                            texture_types,
-                                            texture_file
-                  end
+      @entities = []
+      entities.each do |entity|
+        add_entity_at entity[:type], entity[:position]
+      end
     end
 
 
     # ---=== ENTITY MANAGEMENT : ===---
-    def add_entity(model,position)
-      @entities << RayCaster::Entity.new( @models[model], position )
+    def add_entity_at(entity_type,position)
+      new_entity  = RayCaster::Entity.new   @map,
+                                            entity_type,
+                                            position,
+                                            @entity_types,
+                                            @texture_types,
+                                            @texture_file
+
+      @entities << new_entity
     end
 
 
