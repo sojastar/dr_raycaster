@@ -23,6 +23,7 @@ require 'data/cell_data.rb'
 require 'data/entity_data.rb'
 
 # --- Game Logic : --- 
+require 'app/game_loop.rb'
 
 
 
@@ -67,48 +68,8 @@ LDTK_FILE = 'data/maps/map.ldtk'
 
 # ---=== SETUP : ===---
 def setup(args)
-
-  # --- Level Data : ---
-  ldtk_data         = args.gtk.parse_json_file(LDTK_FILE)
-  args.state.levels = LDtk.parse(ldtk_data, Game::TEXTURE_SIZE)
-
-  # --- Map : ---
-  args.state.map  = RayCaster::Map.new( args.state.levels.first[:cells],
-                                        Game::CELLS,
-                                        Game::TEXTURES,
-                                        Game::TEXTURE_FILE )
-
-  # --- Scene : ---
-  args.state.scene      = RayCaster::Scene.new( args.state.map,
-                                               args.state.levels.first[:entities],
-                                                Game::ENTITIES,
-                                                Game::TEXTURES,
-                                                Game::TEXTURE_FILE )
-
-  # --- Player : ---
-  args.state.player     = RayCaster::Player.new(  4,                            # speed
-                                                  0.25,                         # dampening
-                                                  1.0,                          # angular speed
-                                                  Game::TEXTURE_SIZE,           # texture size
-                                                  0.5,                          # size (relative to texture size)
-                                                  [ args.state.levels.first[:start][0],
-                                                    args.state.levels.first[:start][1] ],
-                                                  90.0 )                        # start angle
-
-  # --- Lighting : ---
-  RayCaster::Lighting::compute( FULL_LIGHT_DISTANCE,
-                                MIN_LIGHT_DISTANCE,
-                                MAX_LIGHT,
-                                MIN_LIGHT )
-
-  # --- Renderer : ---
-  args.state.renderer = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
-                                                  VIEWPORT_HEIGHT,
-                                                  FOCAL,
-                                                  NEAR,
-                                                  FAR,
-                                                  Game::TEXTURE_FILE,
-                                                  Game::TEXTURE_SIZE ) # texture size
+  # --- Game : --- 
+  args.state.game = Game::Loop.new LDTK_FILE
 
   # --- Key Mapping : ---
   #args.state.mapping    = :qwerty
@@ -117,7 +78,8 @@ def setup(args)
   KeyMap::set AZERTY_MAPPING
 
   # --- Miscellenaous : ---
-  args.state.mode       = Debug::parse_debug_arg($gtk.argv)
+  #args.state.mode       = Debug::parse_debug_arg($gtk.argv)
+  args.state.debug  = false
 
   args.state.setup_done = true
 end
@@ -136,17 +98,7 @@ def tick(args)
   # --- Update : ---
   
   # Game :
-  args.state.player.update  args, args.state.map
-  args.state.scene.update   args, args.state.player
-
-  # Camera :
-  args.state.renderer.focal     += 5    if args.inputs.keyboard.key_down.l
-  args.state.renderer.focal     -= 5    if args.inputs.keyboard.key_down.k
-
-  args.state.view_height_ratio  += 0.05 if args.inputs.keyboard.key_down.j
-  args.state.view_height_ratio  -= 0.05 if args.inputs.keyboard.key_down.h
-
-  args.state.mode = ( args.state.mode + 1 ) % 2 if args.inputs.keyboard.key_down.space
+  args.state.game.tick(args)
 
   # Key mapping selection :
   if args.inputs.keyboard.key_down.m then
@@ -163,22 +115,31 @@ def tick(args)
     end
   end
 
+  # Debug :
+  if args.inputs.keyboard.key_down.tab
+    args.state.debug = !args.state.debug
+  end
+
 
   # --- Render : ---
-  args.state.renderer.render  args.state.scene, args.state.player
+  args.state.game.render(args)
+  #args.state.renderer.render  args.state.scene, args.state.player
 
   ## --- Draw : ---
-  if args.state.mode == 0 || args.state.mode.nil? then
-    args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
-                              [0, 360, 1279, 720, 50, 50, 50, 255] ]
+  #if args.state.mode == 0 || args.state.mode.nil? then
+  #  args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
+  #                            [0, 360, 1279, 720, 50, 50, 50, 255] ]
 
 
-  elsif args.state.mode == 1 then
+  #elsif args.state.mode == 1 then
+  if args.state.debug
     offset_world_space  = [20,100]
-    Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
-    Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
-    Debug::render_wall_hits        args.state.renderer.columns,               offset_world_space
-    Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
+    Debug::render_game_top_down  args.state.game, offset_world_space
+
+    #Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
+    #Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
+    #Debug::render_wall_hits        args.state.renderer.columns,               offset_world_space
+    #Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
 
   end
 end

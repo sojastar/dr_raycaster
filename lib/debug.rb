@@ -1,20 +1,4 @@
 module Debug
-  # ---=== DEBUG MODE PARSING: ===---
-  def self.parse_debug_arg(argv)
-    argv.split[1..-1].each do |arg|
-      debug_flag, level  = arg.split('=')
-      #return level.to_i if debug_flag == '--debug' && level != nil
-      if debug_flag == '--debug' && level != nil then
-        return level.to_i
-      else
-        return 0
-      end
-    end
-
-    nil
-  end
-
-
   # ---=== BASIC ELEMENTS : ===---
   def self.draw_cross(position,size,color)
     $gtk.args.outputs.lines <<  [ [ position[0] - size,     position[1] - size,
@@ -25,25 +9,33 @@ module Debug
 
 
   # ---=== WORLD SPACE TOP DOWN RENDER : ===---
+  def self.render_game_top_down(game,offset)
+    Debug.render_map_top_down     game.scene.map,                         offset
+    Debug.render_player_top_down  game.player,            game.renderer,  offset
+    Debug.render_wall_hits        game.renderer.columns,                  offset
+    Debug.render_entities         game.scene,             game.player,    offset
+  end
+
   def self.render_map_top_down(map,offset)
-    blocks  = []
+    cells  = []
     map.height.times do |y|
       map.width.times do |x|
         texture = map[x,y].texture
-        blocks << ( [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] << texture.path ) unless texture.nil?
+        cells << ( [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] << texture.path ) unless texture.nil?
       end
     end
   
-    $gtk.args.outputs.sprites << blocks
+    $gtk.args.outputs.sprites << cells
   end
   
   def self.render_player_top_down(player,renderer,offset)
     # Player's position :
-    x = player.position[0] + offset[0]
-    y = player.position[1] + offset[1]
-    draw_cross(player.position.add(offset), 5, [0, 0, 255, 255])
+    draw_cross(player.position.add(offset), 10, [0, 0, 255, 255])
+    #draw_cross([x, y], 10, [0, 0, 255, 255])
   
     # Player's direction :
+    x   = player.position[0] + offset[0]
+    y   = player.position[1] + offset[1]
     dx  = renderer.focal * player.direction[0]
     dy  = renderer.focal * player.direction[1]
     $gtk.args.outputs.lines << [x, y, x + dx, y + dy, 0, 0, 255, 255]
