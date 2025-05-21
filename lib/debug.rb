@@ -1,95 +1,148 @@
 module Debug
-  # ---=== BASIC ELEMENTS : ===---
-  def self.draw_cross(position,size,color)
-    $gtk.args.outputs.lines <<  [ [ position[0] - size,     position[1] - size,
-                                    position[0] + size + 2, position[1] + size + 2 ] + color,
-                                  [ position[0] - size,     position[1] + size + 2,
-                                    position[0] + size + 2, position[1] - size     ] + color  ]
-  end
+  class DebugOverlay
+    RED         = [ 255,   0,   0, 255 ]
+    GREEN       = [   0, 255,   0, 255 ]
+    BLUE        = [   0,   0, 255, 255 ]
+    YELLOW      = [ 255, 255,   0, 255 ]
+    ORANGE      = [ 255, 127,   0, 255 ]
+    LIGHT_BLUE  = [ 127, 127, 255, 255 ]
+    CYAN        = [   0, 255, 255, 255 ]
+    PURPLE      = [ 128,   0, 255, 255 ]
+    MAGENTA     = [ 255,   0, 255, 255 ]
 
+    attr_sprite
+    attr_accessor :should_draw
 
-  # ---=== WORLD SPACE TOP DOWN RENDER : ===---
-  def self.render_game_top_down(game,offset)
-    Debug.render_map_top_down     game.scene.map,                         offset
-    Debug.render_player_top_down  game.player,            game.renderer,  offset
-    Debug.render_wall_hits        game.renderer.columns,                  offset
-    Debug.render_entities         game.scene,             game.player,    offset
-  end
+    # ---=== INITIALIZATION : ===---
+    def initialize
+      @offset       =  [ 0, 0 ]
+      @should_draw  = false
+    end
 
-  def self.render_map_top_down(map,offset)
-    cells  = []
-    map.height.times do |y|
-      map.width.times do |x|
-        texture = map[x,y].texture
-        cells << ( [ offset[0] + x * 32, offset[1] + y * 32, 32, 32 ] << texture.path ) unless texture.nil?
+    # ---=== BASIC ELEMENTS : ===---
+    def draw_cross(x,y,size,color)
+      $gtk.args.render_target(:debug).lines << [[x - size,
+                                                 y - size,
+                                                 x + size + 2,
+                                                 y + size + 2] + color,
+                                                [x - size,
+                                                 y + size + 2,
+                                                 x + size + 2,
+                                                 y - size] + color]
+    end
+
+    # ---=== WORLD SPACE TOP DOWN RENDER : ===---
+    def render_game_top_down(game)
+      render_map_top_down     game.scene.map
+      render_player_top_down  game.player, game.renderer
+      render_wall_hits        game.renderer.columns
+      render_entities         game.scene, game.player
+    end
+
+    def render_map_top_down(map)
+      cells = []
+      map.height.times do |y|
+        map.width.times do |x|
+          texture = map[x, y].texture
+          next if texture.nil?
+
+          cells << { x: @offset[0] + Game::Data::TEXTURE_SIZE * x,
+                     y: @offset[1] + Game::Data::TEXTURE_SIZE * y,
+                     w: Game::Data::TEXTURE_SIZE,
+                     h: Game::Data::TEXTURE_SIZE,
+                     path: texture.path,
+                     source_x: texture.source_x,
+                     source_y: texture.source_y,
+                     source_w: Game::Data::TEXTURE_SIZE,
+                     source_h: Game::Data::TEXTURE_SIZE }
+        end
+      end
+
+      $gtk.args.render_target(:debug).sprites << cells
+    end
+
+    def render_player_top_down(player,renderer)
+      # Player's position :
+      x   = $gtk.args.grid.right / 2
+      y   = $gtk.args.grid.top / 2
+      draw_cross x, y, 10, RED
+
+      # Player's direction :
+      dx  = renderer.focal * player.direction[0]
+      dy  = renderer.focal * player.direction[1]
+      $gtk.args.render_target(:debug).lines << ( [ x, y, x + dx, y + dy ] + ORANGE )
+
+      # Frustum :
+      frustum_left_bound  = renderer.left_frustum_bound   player
+      frustum_right_bound = renderer.right_frustum_bound  player
+      $gtk.args.render_target(:debug).lines <<  player.position.add(@offset)    +
+                                                frustum_left_bound.add(@offset) +
+                                                CYAN
+      $gtk.args.render_target(:debug).lines <<  player.position.add(@offset)     +
+                                                frustum_right_bound.add(@offset) +
+                                                MAGENTA
+
+      # Look at tile :
+      look_at = player.position.add(player.direction.mul(24))
+      draw_cross  look_at[0] + @offset[0],
+                  look_at[1] + @offset[1],
+                  5,
+                  YELLOW
+    end
+
+    def render_wall_hits(columns)
+      columns.each do |column|
+        color = RED
+        # color = case column.first[:from]
+        #        when :horizontal_ray_casting_method                   then [ 255, 0, 0, 255 ]
+        #        when :horizontal_ray_casting_through_door_DOOR_method then [ 0, 255, 0, 255 ]
+        #        when :horizontal_ray_casting_through_door_WALL_method then [ 0, 0, 255, 255 ]
+        #        when :vertical_ray_casting_method                     then [ 255, 0, 0, 255 ]
+        #        when :vertical_ray_casting_through_door_DOOR_method   then [ 0, 255, 0, 255 ]
+        #        when :vertical_ray_casting_through_door_WALL_method   then [ 0, 0, 255, 255 ]
+        #        end
+        #draw_cross(column.first[:intersection].add(offset), 1, color)
+        draw_cross  column.first[:intersection][0] + @offset[0],
+                    column.first[:intersection][1] + @offset[1],
+                    1,
+                    color
       end
     end
-  
-    $gtk.args.outputs.sprites << cells
-  end
-  
-  def self.render_player_top_down(player,renderer,offset)
-    # Player's position :
-    draw_cross(player.position.add(offset), 10, [0, 0, 255, 255])
-    #draw_cross([x, y], 10, [0, 0, 255, 255])
-  
-    # Player's direction :
-    x   = player.position[0] + offset[0]
-    y   = player.position[1] + offset[1]
-    dx  = renderer.focal * player.direction[0]
-    dy  = renderer.focal * player.direction[1]
-    $gtk.args.outputs.lines << [x, y, x + dx, y + dy, 0, 0, 255, 255]
-  
-    # Frustum :
-    frustum_left_bound  = renderer.left_frustum_bound   player
-    frustum_right_bound = renderer.right_frustum_bound  player
-    $gtk.args.outputs.lines <<  player.position.add(offset)    +
-                                frustum_left_bound.add(offset) +
-                                [255, 0, 0, 255]
-    $gtk.args.outputs.lines <<  player.position.add(offset)     +
-                                frustum_right_bound.add(offset) +
-                                [0, 255, 0, 255]
 
-    # Look at tile :
-    look_at = player.position.add(player.direction.mul(24))
-    draw_cross(look_at.add(offset), 5, [0, 255, 0, 255])
-  end
-  
-  def self.render_wall_hits(columns,offset)
-    columns.each do |column|
-      color = [ 255, 0, 0, 255 ]
-      #color = case column.first[:from]
-      #        when :horizontal_ray_casting_method                   then [ 255, 0, 0, 255 ]
-      #        when :horizontal_ray_casting_through_door_DOOR_method then [ 0, 255, 0, 255 ]
-      #        when :horizontal_ray_casting_through_door_WALL_method then [ 0, 0, 255, 255 ]
-      #        when :vertical_ray_casting_method                     then [ 255, 0, 0, 255 ]
-      #        when :vertical_ray_casting_through_door_DOOR_method   then [ 0, 255, 0, 255 ]
-      #        when :vertical_ray_casting_through_door_WALL_method   then [ 0, 0, 255, 255 ]
-      #        end
-      draw_cross(column.first[:intersection].add(offset), 1, color)
+    def render_entities(scene,player)
+      scene.entities.each do |entity|
+        draw_cross  entity.world_position[0] + @offset[0],
+                    entity.world_position[1] + @offset[1],
+                    2,
+                    BLUE
+
+        half_width = entity.texture.half_width
+        $gtk.args.outputs.lines <<  entity.world_position.add(@offset).sub(player.direction_normal.mul(half_width)) +
+          entity.world_position.add(@offset).add(player.direction_normal.mul(half_width)) +
+          LIGHT_BLUE
+      end
+    end
+
+    def render(game)
+      if @should_draw
+        @offset[0]  = $gtk.args.grid.right / 2 - game.player.position[0]
+        @offset[1]  = $gtk.args.grid.top / 2 - game.player.position[1]
+
+        $gtk.args.render_target(:debug).width   = $gtk.args.grid.right
+        $gtk.args.render_target(:debug).height  = $gtk.args.grid.top
+
+        render_game_top_down(game)
+
+        @x    = 0
+        @y    = 0
+        @w    = $gtk.args.grid.right
+        @h    = $gtk.args.grid.top
+        @path = :debug
+
+      else
+        @x, @y, @w, @h = -1, -1, 0, 0
+
+      end
     end
   end
-  
-  def self.render_entities(scene,player,offset)
-    scene.entities.each do |entity|
-      draw_cross entity.world_position.add(offset), 2, [0, 0, 255, 255]
-      half_width  = entity.texture.half_width
-      $gtk.args.outputs.lines <<  entity.world_position.add(offset).sub( player.direction_normal.mul(half_width) ) +
-                                  entity.world_position.add(offset).add( player.direction_normal.mul(half_width) ) +
-                                  [0, 0, 255, 255]
-    end
-  end
-
-
-  # ---=== VIEW SPACE TOP DOWN RENDER : ===---
-  def self.render_view_space(offset)
-    $gtk.args.outputs.lines << [ offset[0] - 100, offset[1],       offset[0] + 500, offset[1],       170, 170, 170, 255 ]
-    $gtk.args.outputs.lines << [ offset[0],       offset[1] - 100, offset[0],       offset[1] + 500, 140, 140, 140, 255 ]
-  end
-
-  def self.render_entities_in_view_space(scene,offset)
-    scene.entities.each do |entity|
-      draw_cross entity.view_position.add(offset), 10, [0, 0, 255, 255]
-    end
-  end
-end 
+end

@@ -71,15 +71,20 @@ def setup(args)
   # --- Game : --- 
   args.state.game = Game::Loop.new LDTK_FILE
 
+
   # --- Key Mapping : ---
   #args.state.mapping    = :qwerty
   args.state.mapping    = :azerty
   #KeyMap::set QWERTY_MAPPING
   KeyMap::set AZERTY_MAPPING
 
-  # --- Miscellenaous : ---
-  #args.state.mode       = Debug::parse_debug_arg($gtk.argv)
-  args.state.debug  = false
+
+  # --- Debugging : ---
+  args.state.debug  = Debug::DebugOverlay.new
+  args.outputs.static_sprites << args.state.debug
+
+
+  # --- Miscellaneous : ---
 
   args.state.setup_done = true
 end
@@ -117,30 +122,16 @@ def tick(args)
 
   # Debug :
   if args.inputs.keyboard.key_down.tab
-    args.state.debug = !args.state.debug
+    if args.state.debug.should_draw == false
+      args.state.debug.should_draw = true
+    else
+      args.state.debug.should_draw = false
+    end
   end
 
 
   # --- Render : ---
   args.state.game.render(args)
-  #args.state.renderer.render  args.state.scene, args.state.player
-
-  ## --- Draw : ---
-  #if args.state.mode == 0 || args.state.mode.nil? then
-  #  args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
-  #                            [0, 360, 1279, 720, 50, 50, 50, 255] ]
-
-
-  #elsif args.state.mode == 1 then
-  if args.state.debug
-    offset_world_space  = [20,100]
-    Debug::render_game_top_down  args.state.game, offset_world_space
-
-    #Debug::render_map_top_down     args.state.scene.map,                      offset_world_space
-    #Debug::render_player_top_down  args.state.player,   args.state.renderer,  offset_world_space
-    #Debug::render_wall_hits        args.state.renderer.columns,               offset_world_space
-    #Debug::render_entities         args.state.scene,    args.state.player,    offset_world_space
-
-  end
+  args.state.debug.render(args.state.game)
 end
 

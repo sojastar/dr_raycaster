@@ -35,7 +35,7 @@ module RayCaster
       @texture_size   = texture_size
 
       @columns  = []
-      @slices   = MAX_SPRITES.times.map do
+      @slices   = Array.new(MAX_SPRITES) do
                     RayCaster::Slice.new  -SLICE_WIDTH,   # x
                                           0,              # y
                                           SLICE_WIDTH,    # width
@@ -49,6 +49,7 @@ module RayCaster
                                           0,              # source_w
                                           0               # source_h
                   end
+
       $gtk.args.outputs.static_sprites << @slices
 
       @fisheye_correction_factors = compute_fisheye_correction_factors  @viewport_width,
