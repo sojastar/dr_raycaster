@@ -77,6 +77,13 @@ module RayCaster
       cast_wall_rays  player, scene.map 
       render_entities player, scene.entities
 
+      $gtk.args.outputs.sprites <<  { x:    0,
+                                      y:    0,
+                                      w:    $gtk.args.grid.right,
+                                      h:    $gtk.args.grid.top,
+                                      path: :background_gradient,
+                                      source_x: 0, source_y: 0, source_w: 1, source_h: $gtk.args.grid.top }
+
       slice_count = 0
       @columns.each.with_index do |column,index|
         column.each do |layer|
@@ -86,7 +93,8 @@ module RayCaster
           lighting          = RayCaster::Lighting::at layer[:distance].to_i
 
           slice.x         = SLICE_WIDTH * index
-          slice.y         = ( @window_height - @view_height_ratio * rectified_height ) / 2.0
+          #slice.y         = ( @window_height - @view_height_ratio * rectified_height ) / 2.0
+          slice.y         = ( ( @window_height - @view_height_ratio * rectified_height ).div(16) ) * 8
           slice.w         = SLICE_WIDTH
           slice.h         = rectified_height
           slice.r         = lighting

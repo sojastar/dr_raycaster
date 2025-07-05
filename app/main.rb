@@ -129,6 +129,13 @@ def tick(args)
     end
   end
 
+  if args.inputs.keyboard.key_down.p
+    args.outputs.screenshots << { x: 0, y: 0, w: 1280, h: 720,
+                                  path: 'debug.png',
+                                  r: 255, g: 255, b: 255, a: 0
+                                }
+  end
+
 
   # --- Render : ---
   args.state.game.render(args)

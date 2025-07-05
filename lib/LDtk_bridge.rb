@@ -17,11 +17,28 @@ module LDtk
                         }
                         .first
 
-      { cells:    LDtk.tile_layer_to_cell_types_array(cells_layer,
-                                                      tileset,
-                                                      texture_size),
-        entities: LDtk.entity_layer_to_entity_positions(entities_layer),
-        start:    LDtk.level_start(level) }
+      top_color     = [ 128, 128, 128 ]
+      bottom_color  = [ 128, 128, 128 ]
+      level['fieldInstances'].each do |field|
+        if field['__identifier'] == 'top_color'
+          top_color = LDtk.hex_color_to_array_color field['__value']
+        end
+        
+        if field['__identifier'] == 'bottom_color'
+          bottom_color  = LDtk.hex_color_to_array_color field['__value']
+        end
+      end
+
+      putz top_color
+      putz bottom_color
+
+      { cells:        LDtk.tile_layer_to_cell_types_array(cells_layer,
+                                                          tileset,
+                                                          texture_size),
+        entities:     LDtk.entity_layer_to_entity_positions(entities_layer),
+        start:        LDtk.level_start(level),
+        top_color:    top_color,
+        bottom_color: bottom_color }
     end
   end
 
@@ -75,5 +92,9 @@ module LDtk
                     .select { |entity| entity['__identifier'] == 'start' }
 
     start_entity.first['__grid']
+  end
+
+  def self.hex_color_to_array_color(color)
+    color[1..-1].each_char.each_slice(2).map { |c| c[0].to_i(16) * 16 + c[1].to_i(16) }
   end
 end

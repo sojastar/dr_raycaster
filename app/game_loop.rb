@@ -34,7 +34,11 @@ module Game
       RayCaster::Lighting::compute( FULL_LIGHT_DISTANCE,
                                     MIN_LIGHT_DISTANCE,
                                     MAX_LIGHT,
-                                    MIN_LIGHT )
+                                    MIN_LIGHT,
+                                    VIEWPORT_HEIGHT,
+                                    FOCAL,
+                                    @levels.first[:top_color],
+                                    @levels.first[:bottom_color] )
 
       # --- Renderer : ---
       @renderer = RayCaster::Renderer.new(  VIEWPORT_WIDTH,
@@ -57,8 +61,8 @@ module Game
     end
 
     def render(args)
-      args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
-                                [0, 360, 1279, 720, 50, 50, 50, 255] ]
+      #args.outputs.solids  << [ [0,   0, 1279, 359, 40, 40, 40, 255],
+      #                          [0, 360, 1279, 720, 50, 50, 50, 255] ]
 
       @renderer.render  @scene, @player
     end
