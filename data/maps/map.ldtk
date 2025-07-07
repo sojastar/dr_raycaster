@@ -11,7 +11,7 @@
 	"iid": "fec81520-1030-11f0-b056-f5c72a3ef115",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 23,
+	"nextUid": 25,
 	"identifierStyle": "Lowercase",
 	"toc": [{
 		"identifier": "stone",
@@ -364,7 +364,45 @@
 			"limitBehavior": "MoveLastOne",
 			"pivotX": 0.5,
 			"pivotY": 0.5,
-			"fieldDefs": []
+			"fieldDefs": [
+				{
+					"identifier": "angle",
+					"doc": null,
+					"__type": "Float",
+					"uid": 24,
+					"type": "F_Float",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": { "id": "V_Float", "params": [-90] },
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				}
+			]
 		}
 	], "tilesets": [
 		{
@@ -712,7 +750,7 @@
 							"height": 32,
 							"defUid": 18,
 							"px": [528,976],
-							"fieldInstances": [],
+							"fieldInstances": [{ "__identifier": "angle", "__type": "Float", "__value": -90, "__tile": null, "defUid": 24, "realEditorValues": [] }],
 							"__worldX": 528,
 							"__worldY": 976
 						},

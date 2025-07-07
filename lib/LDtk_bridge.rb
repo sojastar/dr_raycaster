@@ -89,8 +89,18 @@ module LDtk
   def self.level_start(level)
     start_entity  = level['layerInstances'][0]['entityInstances']
                     .select { |entity| entity['__identifier'] == 'start' }
+                    .first
 
-    start_entity.first['__grid']
+    angle =  start_entity['fieldInstances']
+             .select { |instance| instance['__identifier'] == 'angle' }
+             .first
+             .fetch('__value')
+             .to_f
+    puts angle
+
+    { x:      start_entity['__grid'][0],
+      y:      start_entity['__grid'][1],
+      angle:  angle }
   end
 
   def self.hex_color_to_array_color(color)
