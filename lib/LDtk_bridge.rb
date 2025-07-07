@@ -23,18 +23,17 @@ module LDtk
         if field['__identifier'] == 'top_color'
           top_color = LDtk.hex_color_to_array_color field['__value']
         end
-        
+
         if field['__identifier'] == 'bottom_color'
           bottom_color  = LDtk.hex_color_to_array_color field['__value']
         end
       end
 
-      putz top_color
-      putz bottom_color
-
       { cells:        LDtk.tile_layer_to_cell_types_array(cells_layer,
                                                           tileset,
                                                           texture_size),
+        width:        cells_layer['__cWid'],
+        height:       cells_layer['__cHei'],
         entities:     LDtk.entity_layer_to_entity_positions(entities_layer),
         start:        LDtk.level_start(level),
         top_color:    top_color,
@@ -51,7 +50,7 @@ module LDtk
     ids = LDtk.tileset_customData_to_id_hash(tileset)
 
     layer['gridTiles'].each do |tile|
-      tile_x    = tile['px'][0] / texture_size
+      tile_x    = width - tile['px'][0] / texture_size
       tile_y    = tile['px'][1] / texture_size
       tile_type = ids[tile['t']]
 
