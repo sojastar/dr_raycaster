@@ -1,22 +1,22 @@
 # ---=== IMPORTS : ===---
 
 # --- Raycasting Engine : ---
-require 'lib/debug.rb'
-require 'lib/extend_array.rb'
-require 'lib/trigo.rb'
-require 'lib/texture.rb'
-require 'lib/map.rb'
-require 'lib/cell.rb'
-require 'lib/entity.rb'
-require 'lib/scene.rb'
-require 'lib/lighting.rb'
-require 'lib/renderer.rb'
-require 'lib/slice.rb'
-require 'lib/keymap.rb'
-require 'lib/player.rb'
+require 'lib/raycaster/debug.rb'
+require 'lib/raycaster/extend_array.rb'
+require 'lib/raycaster/trigo.rb'
+require 'lib/raycaster/texture.rb'
+require 'lib/raycaster/map.rb'
+require 'lib/raycaster/cell.rb'
+require 'lib/raycaster/entity.rb'
+require 'lib/raycaster/scene.rb'
+require 'lib/raycaster/lighting.rb'
+require 'lib/raycaster/renderer.rb'
+require 'lib/raycaster/slice.rb'
+require 'lib/raycaster/keymap.rb'
+require 'lib/raycaster/player.rb'
 
 # --- Game Data : ---
-require 'lib/LDtk_bridge.rb'
+require 'lib/raycaster/LDtk_bridge.rb'
 
 require 'data/texture_data.rb'
 require 'data/cell_data.rb'
