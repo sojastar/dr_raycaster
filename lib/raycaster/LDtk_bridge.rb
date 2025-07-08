@@ -77,7 +77,8 @@ module LDtk
     layer['entityInstances'].map { |entity|
       if entity['__identifier'] != 'start'
         { type:     entity['__identifier'].to_sym,
-          position: entity['__grid'] }
+          position: [ layer['__cWid'] - entity['__grid'][0],
+                                        entity['__grid'][1] ] }
 
       else
         nil
