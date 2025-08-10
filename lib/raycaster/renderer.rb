@@ -339,12 +339,20 @@ module RayCaster
         # Scanning parameters :
         projected_left_bound  =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] + entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
         projected_right_bound =  @viewport_half_width - ( @viewport_half_width * ( entity.view_position[0] - entity.texture.half_width ).to_f / entity.view_position[1] ).ceil
-        projected_width       = projected_right_bound - projected_left_bound + 2 # + 2 ?!?!?!
+        projected_width       = projected_right_bound - projected_left_bound
         texture_step          = entity.texture.width.to_f / projected_width
 
         # Clipping :
-        projected_left_bound  = [ 0, projected_left_bound ].max
-        projected_right_bound = [ projected_right_bound, @viewport_width - 1 ].min
+        texture_start_offset  = 0
+
+        if projected_left_bound  < 0
+          texture_start_offset  = -entity.texture.width.to_f * projected_left_bound / projected_width
+          projected_left_bound  = 0
+        end
+
+        if projected_right_bound >= @viewport_width
+          projected_right_bound = @viewport_width - 1
+        end
 
         # Scanning :
         projected_left_bound.upto(projected_right_bound) do |x|
@@ -352,7 +360,7 @@ module RayCaster
             height  = @viewport_texture_factor / ( entity.view_position[1] * @fisheye_correction_factors[x] )
             @columns[x] <<  { distance:         entity.view_position[1],
                               texture_path:     entity.texture.path,
-                              texture_offset_x: ( ( x - projected_left_bound ) * texture_step ).round + entity.texture.source_x,
+                              texture_offset_x: texture_start_offset + ( ( x - projected_left_bound ) * texture_step ).round + entity.texture.source_x,
                               texture_offset_y: entity.texture.source_y,
                               height:         height }
           end
